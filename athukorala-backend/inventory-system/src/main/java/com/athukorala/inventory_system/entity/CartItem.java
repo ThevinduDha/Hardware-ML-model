@@ -11,10 +11,12 @@ public class CartItem {
     private Long id;
 
     @ManyToOne
-    private User user; // Links to the customer [cite: 823]
+    private User user;
 
-    @ManyToOne
-    private Product product; // Links to the hardware asset [cite: 824]
+    // --- UPDATED: Changed to EAGER to ensure product details are sent to React ---
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "product_id")
+    private Product product;
 
-    private int quantity; // Must be > 0 and <= available stock [cite: 713, 714]
+    private int quantity;
 }

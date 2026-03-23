@@ -51,12 +51,20 @@ public class CartController {
         return ResponseEntity.ok("Asset successfully registered in cart.");
     }
 
-    @GetMapping("/user/{userId}")
-    public List<CartItem> getCartByUserId(@PathVariable Long userId) {
+    // --- UPDATED: Added a secondary mapping to handle the frontend call ---
+    @GetMapping("/{userId}")
+    public List<CartItem> getCartByUserIdDirect(@PathVariable Long userId) {
         return cartRepository.findByUserId(userId);
     }
 
-    // --- FIX: Ensure @RequestParam quantity matches the frontend call ---
+    @GetMapping("/user/{userId}")
+    public List<CartItem> getCartByUserId(@PathVariable Long userId) {
+        List<CartItem> items = cartRepository.findByUserId(userId);
+        // Debugging line for IntelliJ Console
+        System.out.println("Cart Sync Requested for User: " + userId + " | Items found: " + items.size());
+        return items;
+    }
+
     @PatchMapping("/update-quantity/{id}")
     public ResponseEntity<?> updateQuantity(@PathVariable Long id, @RequestParam int quantity) {
         CartItem item = cartRepository.findById(id)
