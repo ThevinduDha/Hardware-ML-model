@@ -10,6 +10,7 @@ import CustomerDashboard from './pages/CustomerDashboard'; // IMPORTED
 import ProductDetail from './pages/ProductDetail';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
+import OrderHistory from './pages/OrderHistory';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/shopping-cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/order-history" element={<OrderHistory />} />
 
         {/* --- ROLE-BASED DASHBOARDS --- */}
         
