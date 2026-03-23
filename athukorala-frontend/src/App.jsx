@@ -5,12 +5,17 @@ import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import PortalPage from './pages/PortalPage';
 import AdminDashboard from './pages/AdminDashboard';
-import StaffDashboard from './pages/StaffDashboard'; // IMPORTED
-import CustomerDashboard from './pages/CustomerDashboard'; // IMPORTED
+import StaffDashboard from './pages/StaffDashboard'; 
+import CustomerDashboard from './pages/CustomerDashboard'; 
 import ProductDetail from './pages/ProductDetail';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderHistory from './pages/OrderHistory';
+import OrderHistoryAdmin from './pages/AdminOrders'; // For Admin Order View
+import SupplierRegistry from './pages/SupplierRegistry'; // For Suppliers
+import StockAdjustment from './pages/StockAdjustment'; // For Inventory
+import InventoryReport from './pages/InventoryReport'; // For Analytics
+import ProtectedRoute from './components/ProtectedRoute'; // THE GATEKEEPER
 
 function App() {
   return (
@@ -33,23 +38,73 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/portal" element={<PortalPage />} />
         <Route path="/product/:id" element={<ProductDetail />} />
+        
+        {/* --- CUSTOMER ROUTES --- */}
         <Route path="/shopping-cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-history" element={<OrderHistory />} />
+        <Route 
+          path="/customer-dashboard" 
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN', 'STAFF']}>
+              <CustomerDashboard />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* --- ROLE-BASED DASHBOARDS --- */}
-        
-        {/* 1. ADMIN: Full system access [cite: 100, 165] */}
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        {/* --- STAFF ROUTES --- */}
+        <Route 
+          path="/staff-dashboard" 
+          element={
+            <ProtectedRoute allowedRoles={['STAFF', 'ADMIN']}>
+              <StaffDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/staff/adjust-stock" 
+          element={
+            <ProtectedRoute allowedRoles={['STAFF', 'ADMIN']}>
+              <StockAdjustment />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* 2. STAFF: Operational & Inventory access [cite: 102, 167] */}
-        <Route path="/staff-dashboard" element={<StaffDashboard />} />
-
-        {/* 3. CUSTOMER: Catalog & Order access [cite: 103, 168] */}
-        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+        {/* --- ADMIN ROUTES: FULL SYSTEM ACCESS --- */}
+        <Route 
+          path="/admin-dashboard" 
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/orders" 
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <OrderHistoryAdmin />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/suppliers" 
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <SupplierRegistry />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/reports" 
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <InventoryReport />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* --- ERROR HANDLING --- */}
-        {/* Auto-redirect any typos back to Home */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

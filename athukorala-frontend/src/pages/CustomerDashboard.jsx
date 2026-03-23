@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, Eye } from 'lucide-react';
+import { Search, ShoppingCart, Eye, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast'; // IMPORTED TOAST FOR FEEDBACK
 
 const CustomerDashboard = () => {
@@ -10,32 +10,45 @@ const CustomerDashboard = () => {
   const [category, setCategory] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [cartCount, setCartCount] = useState(0); // STATE FOR DYNAMIC CART COUNT
+  const [isError, setIsError] = useState(false); // NEW: Protocol error state
   const navigate = useNavigate();
 
   useEffect(() => {
     fetch("http://localhost:8080/api/products/all")
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data);
-        setFilteredProducts(data);
+      .then(res => {
+        if (!res.ok) throw new Error("Registry Sync Failure");
+        return res.json();
       })
-      .catch(err => console.error("Catalog Offline"));
+      .then(data => {
+        // Ensure data is an array before setting state to prevent .map() crashes
+        const productList = Array.isArray(data) ? data : [];
+        setProducts(productList);
+        setFilteredProducts(productList);
+        setIsError(false);
+      })
+      .catch(err => {
+        console.error("Catalog Offline:", err);
+        setIsError(true);
+        setProducts([]);
+        setFilteredProducts([]);
+      });
     
     // FETCH INITIAL CART COUNT ON LOAD
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
-       // Placeholder for fetching actual cart count from backend
        // fetch(`http://localhost:8080/api/cart/count/${user.id}`)...
     }
   }, []);
 
   useEffect(() => {
-    let result = products;
+    // Safety check: only filter if products is a valid array
+    let result = Array.isArray(products) ? products : [];
+    
     if (category !== "ALL") {
-      result = result.filter(p => p.category.toUpperCase() === category);
+      result = result.filter(p => p.category?.toUpperCase() === category);
     }
     if (searchTerm) {
-      result = result.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      result = result.filter(p => p.name?.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     setFilteredProducts(result);
   }, [category, searchTerm, products]);
@@ -130,10 +143,19 @@ const CustomerDashboard = () => {
         </div>
       </header>
 
-      {/* PRODUCT GRID */}
+      {/* ERROR MESSAGE IF BACKEND IS DOWN */}
+      {isError && (
+        <div className="flex flex-col items-center justify-center py-32 border border-dashed border-red-500/20 bg-red-500/5 mb-10">
+          <AlertCircle className="text-red-500 mb-4" size={40} />
+          <p className="text-[10px] font-black tracking-[0.4em] text-red-500 uppercase">Logistics Server Unreachable</p>
+          <p className="text-[10px] text-gray-500 uppercase mt-2">Please verify backend status in IntelliJ</p>
+        </div>
+      )}
+
+      {/* PRODUCT GRID - ADDED OPTIONAL CHAINING TO PREVENT CRASH */}
       <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
         <AnimatePresence>
-          {filteredProducts.map((product) => (
+          {filteredProducts?.map((product) => (
             <ProductCard 
               key={product.id} 
               product={product} 
@@ -161,11 +183,11 @@ const ProductCard = ({ product, navigate, onAddToCart }) => (
     {/* Product Image */}
     <div className="aspect-square bg-black border border-white/5 mb-6 overflow-hidden relative">
       <img 
-        src={product.imageUrl || "https://res.cloudinary.com/demo/image/upload/v1631530000/industrial-box.png"} 
-        alt={product.name} 
+        src={product?.imageUrl || "https://res.cloudinary.com/demo/image/upload/v1631530000/industrial-box.png"} 
+        alt={product?.name} 
         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" 
       />
-      {product.stockQuantity <= 0 && (
+      {product?.stockQuantity <= 0 && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center">
           <span className="text-[10px] font-black tracking-[0.4em] text-red-500 border border-red-500/50 px-4 py-2 uppercase">Out of Stock</span>
         </div>
@@ -175,24 +197,24 @@ const ProductCard = ({ product, navigate, onAddToCart }) => (
     {/* Details */}
     <div className="space-y-2">
       <div className="flex justify-between items-start">
-        <p className="text-[#D4AF37] text-[9px] font-black tracking-widest uppercase">{product.category}</p>
-        <p className="text-gray-500 font-mono text-[10px]">LKR {product.price}</p>
+        <p className="text-[#D4AF37] text-[9px] font-black tracking-widest uppercase">{product?.category}</p>
+        <p className="text-gray-500 font-mono text-[10px]">LKR {product?.price?.toLocaleString()}</p>
       </div>
-      <h3 className="text-lg font-bold uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors">{product.name}</h3>
+      <h3 className="text-lg font-bold uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors">{product?.name}</h3>
     </div>
 
     {/* Hover Actions */}
     <div className="mt-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0">
       <button 
         onClick={onAddToCart}
-        disabled={product.stockQuantity <= 0}
-        className={`flex-1 ${product.stockQuantity <= 0 ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-[#D4AF37] text-black hover:bg-[#E5C158]'} py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all`}
+        disabled={product?.stockQuantity <= 0}
+        className={`flex-1 ${product?.stockQuantity <= 0 ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-[#D4AF37] text-black hover:bg-[#E5C158]'} py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all`}
       >
         <ShoppingCart size={14} /> Add to Cart
       </button>
       
       <button 
-        onClick={() => navigate(`/product/${product.id}`)}
+        onClick={() => navigate(`/product/${product?.id}`)}
         className="p-3 border border-white/10 hover:border-[#D4AF37] transition-colors"
       >
         <Eye size={16} />
