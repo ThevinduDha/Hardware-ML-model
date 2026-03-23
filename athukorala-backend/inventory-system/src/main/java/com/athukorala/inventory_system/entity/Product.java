@@ -1,7 +1,8 @@
-package com.athukorala.inventory_system.entity; // MUST be .entity, not .controller
+package com.athukorala.inventory_system.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore; // Use this to prevent infinite loops
 
 @Entity
 @Table(name = "products")
@@ -17,7 +18,11 @@ public class Product {
     private Integer stockQuantity;
     private String description;
     private String imageUrl;
-
-    // Threshold for the Low Stock Watchdog
     private int reorderLevel;
+
+    // --- ADD THIS SECTION ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id")
+    @JsonIgnore // Important: Stops the API from crashing in an infinite loop
+    private Supplier supplier;
 }
