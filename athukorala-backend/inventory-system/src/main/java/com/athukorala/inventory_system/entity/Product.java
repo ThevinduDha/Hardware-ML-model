@@ -1,4 +1,4 @@
-package com.athukorala.inventory_system.entity;
+package com.athukorala.inventory_system.entity; // MUST be .entity, not .controller
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -17,4 +17,7 @@ public class Product {
     private Integer stockQuantity;
     private String description;
     private String imageUrl;
+
+    // Threshold for the Low Stock Watchdog
+    private int reorderLevel;
 }
