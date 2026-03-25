@@ -2,7 +2,7 @@ package com.athukorala.inventory_system.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import com.fasterxml.jackson.annotation.JsonIgnore; // Use this to prevent infinite loops
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "products")
@@ -20,9 +20,12 @@ public class Product {
     private String imageUrl;
     private int reorderLevel;
 
-    // --- ADD THIS SECTION ---
+    // --- ADD THIS TRANSIENT FIELD FOR UI SYNC ---
+    @Transient
+    private Double discountedPrice;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supplier_id")
-    @JsonIgnore // Important: Stops the API from crashing in an infinite loop
+    @JsonIgnore
     private Supplier supplier;
 }

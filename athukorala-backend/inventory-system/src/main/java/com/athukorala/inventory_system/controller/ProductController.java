@@ -4,6 +4,7 @@ import com.athukorala.inventory_system.entity.Product;
 import com.athukorala.inventory_system.entity.AuditLog;
 import com.athukorala.inventory_system.repository.ProductRepository;
 import com.athukorala.inventory_system.repository.AuditLogRepository;
+import com.athukorala.inventory_system.service.PromotionService; // Added Import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +19,15 @@ public class ProductController {
 
     private final ProductRepository productRepository;
     private final AuditLogRepository auditLogRepository;
+    private final PromotionService promotionService; // Added Promotion Service
 
     @Autowired
-    public ProductController(ProductRepository productRepository, AuditLogRepository auditLogRepository) {
+    public ProductController(ProductRepository productRepository,
+                             AuditLogRepository auditLogRepository,
+                             PromotionService promotionService) {
         this.productRepository = productRepository;
         this.auditLogRepository = auditLogRepository;
+        this.promotionService = promotionService;
     }
 
     @PostMapping("/add")
@@ -30,29 +35,33 @@ public class ProductController {
         if (product.getReorderLevel() <= 0) {
             product.setReorderLevel(5);
         }
-
         Product savedProduct = productRepository.save(product);
-
         AuditLog log = new AuditLog();
         log.setAction("PRODUCT_CREATION");
         log.setPerformedBy("ADMIN");
         log.setDetails("CREATED NEW ASSET: " + product.getName() + " IN CATEGORY: " + product.getCategory());
         log.setTimestamp(LocalDateTime.now());
         auditLogRepository.save(log);
-
         return savedProduct;
     }
 
     @GetMapping("/all")
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+        // --- INJECT DISCOUNT LOGIC FOR UI ---
+        for (Product product : products) {
+            product.setDiscountedPrice(promotionService.calculateDiscountedPrice(product));
+        }
+        return products;
     }
 
-    // --- ONLY ONE INSTANCE OF THIS METHOD ---
     @GetMapping("/{id}")
     public Product getProductById(@PathVariable Long id) {
-        return productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Asset not found in registry"));
+        // --- INJECT DISCOUNT LOGIC ---
+        product.setDiscountedPrice(promotionService.calculateDiscountedPrice(product));
+        return product;
     }
 
     @GetMapping("/low-stock")
@@ -69,17 +78,15 @@ public class ProductController {
     public Product adjustStock(@PathVariable Long id, @RequestBody java.util.Map<String, Object> payload) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Asset not found"));
-
         int amount = Integer.parseInt(payload.get("amount").toString());
         String adminName = payload.getOrDefault("adminName", "System Admin").toString();
-
         product.setStockQuantity(product.getStockQuantity() + amount);
         Product savedProduct = productRepository.save(product);
 
         AuditLog log = new AuditLog();
         log.setAction("STOCK_ADJUSTMENT");
         log.setPerformedBy(adminName);
-        log.setDetails("ADJUSTED " + product.getName() + " BY " + amount + " UNITS. NEW TOTAL: " + product.getStockQuantity());
+        log.setDetails("ADJUSTED " + product.getName() + " BY " + amount + " UNITS.");
         log.setTimestamp(LocalDateTime.now());
         auditLogRepository.save(log);
 
@@ -90,14 +97,12 @@ public class ProductController {
     public void deleteProduct(@PathVariable Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Asset not found"));
-
         AuditLog log = new AuditLog();
         log.setAction("PRODUCT_DELETION");
         log.setPerformedBy("ADMIN");
-        log.setDetails("PERMANENTLY REMOVED ASSET: " + product.getName() + " (ID: " + id + ")");
+        log.setDetails("PERMANENTLY REMOVED ASSET: " + product.getName());
         log.setTimestamp(LocalDateTime.now());
         auditLogRepository.save(log);
-
         productRepository.deleteById(id);
     }
 }
