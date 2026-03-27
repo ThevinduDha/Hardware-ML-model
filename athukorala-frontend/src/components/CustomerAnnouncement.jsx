@@ -1,77 +1,106 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Megaphone, Clock, ChevronRight } from 'lucide-react';
+import { Megaphone, Clock, ChevronRight, Sparkles, Calendar } from 'lucide-react';
 
 const CustomerAnnouncement = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    // Fetch specifically for the customer audience [cite: 950-953]
     fetch("http://localhost:8080/api/notices/customer")
       .then(res => res.json())
-      .then(data => setAnnouncements(Array.isArray(data) ? data : []))
+      .then(data => {
+        // SCHEDULING FILTER: Only show notices active for TODAY
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        const activeToday = (Array.isArray(data) ? data : []).filter(item => {
+          const start = new Date(item.startDate);
+          const end = new Date(item.expiryDate);
+          start.setHours(0, 0, 0, 0);
+          end.setHours(0, 0, 0, 0);
+          
+          return now >= start && now <= end;
+        });
+
+        setAnnouncements(activeToday);
+      })
       .catch(err => console.error("Announcement stream offline"));
   }, []);
+
+  useEffect(() => {
+    if (announcements.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % announcements.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [announcements]);
 
   if (!announcements || announcements.length === 0) return null;
 
   const current = announcements[currentIndex];
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-12 relative overflow-hidden bg-[#D4AF37]/5 border border-[#D4AF37]/20 p-8 backdrop-blur-xl group text-left"
+        key={currentIndex}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        className="mb-12 relative overflow-hidden bg-black border border-[#D4AF37]/30 p-8 backdrop-blur-3xl group text-left"
       >
-        {/* Animated Background Element */}
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#D4AF37]/10 blur-3xl rounded-full animate-pulse" />
+        <div className="absolute inset-0 bg-[#D4AF37]/5 animate-pulse" />
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#D4AF37]/10 blur-[100px] rounded-full" />
         
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-start gap-5">
-            <div className="p-3 bg-[#D4AF37] text-black rounded-sm shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-              <Megaphone size={20} />
+          <div className="flex items-start gap-6">
+            <div className="p-4 bg-[#D4AF37] text-black rounded-sm shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+              <Sparkles size={24} className="animate-spin-slow" />
             </div>
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#D4AF37]">Strategic Announcement</span>
+              <div className="flex items-center gap-4 mb-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#D4AF37]">Active Promotion Protocol</span>
                 {current.isUrgent && (
-                  <span className="px-2 py-0.5 bg-red-500 text-white text-[8px] font-black uppercase tracking-widest animate-bounce">
-                    Urgent
+                  <span className="px-3 py-1 bg-red-600 text-white text-[8px] font-black uppercase tracking-widest animate-pulse">
+                    High Priority
                   </span>
                 )}
               </div>
-              <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">{current.title}</h2>
-              <p className="text-gray-400 text-sm max-w-2xl leading-relaxed italic">
+              <h2 className="text-3xl font-black uppercase tracking-tighter mb-2 text-white">{current.title}</h2>
+              
+              {/* SCHEDULING BADGE */}
+              <div className="flex items-center gap-4 mt-2 mb-4">
+                 <div className="flex items-center gap-2 text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                    <Calendar size={12}/> Effective: {new Date(current.startDate).toLocaleDateString()}
+                 </div>
+                 <div className="w-1 h-1 rounded-full bg-white/20" />
+                 <div className="flex items-center gap-2 text-[9px] font-bold text-[#D4AF37] uppercase tracking-widest">
+                    <Clock size={12}/> Deployment Ends: {new Date(current.expiryDate).toLocaleDateString()}
+                 </div>
+              </div>
+
+              <p className="text-gray-400 text-sm max-w-2xl leading-relaxed italic border-l-2 border-[#D4AF37]/20 pl-4">
                 "{current.message}"
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-4 min-w-[200px]">
-            <div className="flex items-center gap-2 text-[9px] font-bold text-[#D4AF37] uppercase tracking-widest">
-              <Clock size={12} /> Valid Until: {current.expiryDate ? new Date(current.expiryDate).toLocaleDateString() : 'TBD'}
-            </div>
-            <button className="px-6 py-3 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-[#D4AF37] hover:text-black transition-all flex items-center gap-2">
-              View Promotion <ChevronRight size={14} />
+          <div className="flex flex-col items-end gap-5 min-w-[220px]">
+            <button className="w-full px-8 py-4 bg-[#D4AF37] text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white transition-all shadow-2xl flex items-center justify-center gap-3 active:scale-95">
+              Secure Offer <ChevronRight size={16} />
             </button>
           </div>
         </div>
 
-        {/* Navigation Dots if multiple announcements exist [cite: 954] */}
         {announcements.length > 1 && (
-          <div className="flex gap-2 mt-6">
+          <div className="flex gap-3 mt-8">
             {announcements.map((_, i) => (
-              <button 
-                key={i}
-                onClick={() => setCurrentIndex(i)}
-                className={`h-1 transition-all ${i === currentIndex ? 'w-8 bg-[#D4AF37]' : 'w-2 bg-white/10'}`}
-              />
+              <button key={i} onClick={() => setCurrentIndex(i)} className={`h-1 transition-all duration-500 ${i === currentIndex ? 'w-12 bg-[#D4AF37]' : 'w-3 bg-white/10 hover:bg-white/30'}`} />
             ))}
           </div>
         )}
       </motion.div>
+      <style>{`.animate-spin-slow { animation: spin 8s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </AnimatePresence>
   );
 };
