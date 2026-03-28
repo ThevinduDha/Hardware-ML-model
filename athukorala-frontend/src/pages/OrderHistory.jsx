@@ -50,9 +50,9 @@ const OrderHistory = () => {
           <div className="p-2.5 bg-[#D4AF37] rounded-sm shadow-[0_0_30px_rgba(212,175,55,0.3)]">
             <Activity className="text-black" size={22} />
           </div>
-          <div className="flex flex-col">
-            <span className="font-black tracking-[0.3em] uppercase text-sm">Athukorala</span>
-            <span className="text-[8px] font-bold text-[#D4AF37] tracking-[0.2em] uppercase opacity-60">Industrial Registry</span>
+          <div className="flex flex-col text-left">
+            <span className="font-black tracking-[0.3em] uppercase text-sm text-left">Athukorala</span>
+            <span className="text-[8px] font-bold text-[#D4AF37] tracking-[0.2em] uppercase opacity-60 text-left">Industrial Registry</span>
           </div>
         </div>
 
@@ -70,22 +70,23 @@ const OrderHistory = () => {
           <NavItem 
             icon={<Heart size={18}/>} 
             label="Curated List" 
-            onClick={() => navigate('/curated-list')} // FIXED: Now navigates correctly
+            onClick={() => navigate('/curated-list')} 
           />
           <NavItem 
             icon={<User size={18}/>} 
             label="Account Config" 
+            onClick={() => navigate('/profile')} // FIXED: Added absolute path
           />
         </nav>
 
-        <div className="mt-auto p-6 bg-white/[0.02] border border-white/5 rounded-sm mb-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Registry Identity</p>
-          <p className="text-xs font-bold uppercase truncate text-[#D4AF37]">{user.name}</p>
+        <div className="mt-auto p-6 bg-white/[0.02] border border-white/5 rounded-sm mb-4 text-left">
+          <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2 text-left">Registry Identity</p>
+          <p className="text-xs font-bold uppercase truncate text-[#D4AF37] text-left">{user.name}</p>
         </div>
 
         <button 
           onClick={handleLogout} 
-          className="flex items-center gap-4 px-4 py-3 text-gray-500 hover:text-red-500 transition-all text-[10px] font-black uppercase tracking-[0.3em] group"
+          className="flex items-center gap-4 px-4 py-3 text-gray-500 hover:text-red-500 transition-all text-[10px] font-black uppercase tracking-[0.3em] group text-left"
         >
           <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" /> 
           Terminate Session
@@ -93,13 +94,13 @@ const OrderHistory = () => {
       </motion.aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-8 lg:p-16 overflow-y-auto relative text-left">
+      <main className="flex-1 p-8 lg:p-16 overflow-y-auto relative text-left text-left">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#D4AF37]/5 blur-[150px] rounded-full -z-10 pointer-events-none" />
 
-        <header className="mb-20">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <p className="text-[#D4AF37] text-[10px] font-black tracking-[0.6em] uppercase mb-4">Transaction Archives</p>
-            <h1 className="text-8xl font-black uppercase tracking-tighter leading-[0.8]">
+        <header className="mb-20 text-left">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-left">
+            <p className="text-[#D4AF37] text-[10px] font-black tracking-[0.6em] uppercase mb-4 text-left">Transaction Archives</p>
+            <h1 className="text-8xl font-black uppercase tracking-tighter leading-[0.8] text-left">
               Order <br /> <span className="text-transparent stroke-text">History</span>
             </h1>
           </motion.div>
@@ -111,12 +112,12 @@ const OrderHistory = () => {
           <motion.div 
             initial="initial" animate="animate"
             variants={{ animate: { transition: { staggerChildren: 0.1 } } }}
-            className="space-y-6 max-w-6xl"
+            className="space-y-6 max-w-6xl text-left"
           >
             {orders.length === 0 ? (
-              <div className="py-40 text-center border border-dashed border-white/5 opacity-20">
+              <div className="py-40 text-center border border-dashed border-white/5 opacity-20 text-left">
                 <Package size={48} className="mx-auto mb-4" />
-                <p className="font-black uppercase tracking-widest text-xs">No Records Found</p>
+                <p className="font-black uppercase tracking-widest text-xs text-left">No Records Found</p>
               </div>
             ) : orders.map((order) => (
               <OrderCard key={order.id} order={order} onOpenDetails={() => setSelectedOrder(order)} />
@@ -135,51 +136,51 @@ const OrderHistory = () => {
               />
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl bg-[#0a0a0a] border border-white/10 z-[101] p-12 shadow-2xl overflow-hidden"
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl bg-[#0a0a0a] border border-white/10 z-[101] p-12 shadow-2xl overflow-hidden text-left"
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-[#D4AF37]" />
                 
-                <div className="flex justify-between items-start mb-16">
-                  <div>
-                    <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.5em] mb-3">Detailed Manifest</p>
-                    <h2 className="text-6xl font-black uppercase tracking-tighter leading-none">ATH-{selectedOrder.id}</h2>
+                <div className="flex justify-between items-start mb-16 text-left">
+                  <div className="text-left">
+                    <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.5em] mb-3 text-left">Detailed Manifest</p>
+                    <h2 className="text-6xl font-black uppercase tracking-tighter leading-none text-left">ATH-{selectedOrder.id}</h2>
                   </div>
                   <button onClick={() => setSelectedOrder(null)} className="p-4 hover:bg-white/5 transition-all border border-white/10">
                     <X size={24} />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-12 border-y border-white/5 py-10 mb-10">
-                  <div>
-                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Protocol Status</p>
-                    <p className="text-sm font-black text-green-500 uppercase tracking-widest flex items-center gap-2">
+                <div className="grid grid-cols-2 gap-12 border-y border-white/5 py-10 mb-10 text-left">
+                  <div className="text-left">
+                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2 text-left">Protocol Status</p>
+                    <p className="text-sm font-black text-green-500 uppercase tracking-widest flex items-center gap-2 text-left">
                       <ShieldCheck size={16}/> {selectedOrder.status || 'AUTHORIZED'}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Deployment Date</p>
-                    <p className="text-sm font-black uppercase tracking-widest text-white">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
+                  <div className="text-left">
+                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2 text-left">Deployment Date</p>
+                    <p className="text-sm font-black uppercase tracking-widest text-white text-left">{new Date(selectedOrder.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 mb-16">
-                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-2">
+                <div className="space-y-4 mb-16 text-left">
+                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-2 text-left">
                       <Package size={14} className="text-[#D4AF37]" /> Asset Manifest
                     </p>
-                    <div className="max-h-60 overflow-y-auto pr-6 space-y-4 custom-scrollbar">
+                    <div className="max-h-60 overflow-y-auto pr-6 space-y-4 custom-scrollbar text-left">
                       {selectedOrder.orderItems?.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center bg-white/[0.02] p-5 border border-white/5 hover:border-[#D4AF37]/30 transition-all">
-                            <p className="text-xs font-black uppercase tracking-widest">{item.productName} <span className="text-[#D4AF37] ml-2">x{item.quantity}</span></p>
+                        <div key={item.id} className="flex justify-between items-center bg-white/[0.02] p-5 border border-white/5 hover:border-[#D4AF37]/30 transition-all text-left">
+                            <p className="text-xs font-black uppercase tracking-widest text-left">{item.productName} <span className="text-[#D4AF37] ml-2">x{item.quantity}</span></p>
                             <p className="text-sm font-mono font-black">LKR {item.price?.toLocaleString()}</p>
                         </div>
                       ))}
                     </div>
                 </div>
 
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">Grand Valuation</p>
-                    <h3 className="text-5xl font-black text-[#D4AF37] tracking-tighter">LKR {selectedOrder.total?.toLocaleString()}</h3>
+                <div className="flex justify-between items-end text-left">
+                  <div className="text-left">
+                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2 text-left">Grand Valuation</p>
+                    <h3 className="text-5xl font-black text-[#D4AF37] tracking-tighter text-left">LKR {selectedOrder.total?.toLocaleString()}</h3>
                   </div>
                   <button className="px-10 py-5 bg-white/5 border border-white/10 text-[11px] font-black uppercase tracking-[0.4em] hover:bg-[#D4AF37] hover:text-black transition-all shadow-2xl">
                     Download Receipt
@@ -196,7 +197,6 @@ const OrderHistory = () => {
   );
 };
 
-// NavItem Component fixed with onClick
 const NavItem = ({ icon, label, active = false, onClick }) => (
   <button onClick={onClick} className={`w-full flex items-center gap-5 px-8 py-5 transition-all text-[11px] font-black tracking-[0.3em] uppercase group ${active ? 'bg-[#D4AF37] text-black shadow-2xl' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
     <span className={active ? 'text-black' : 'group-hover:text-[#D4AF37] transition-colors'}>{icon}</span> {label}
@@ -207,22 +207,22 @@ const OrderCard = ({ order, onOpenDetails }) => (
   <motion.div 
     variants={{ initial: { opacity: 0, x: -20 }, animate: { opacity: 1, x: 0 } }}
     whileHover={{ x: 15 }}
-    className="group relative bg-[#080808] border border-white/5 p-10 transition-all hover:border-[#D4AF37]/40 flex flex-col md:flex-row justify-between items-center gap-12 shadow-2xl"
+    className="group relative bg-[#080808] border border-white/5 p-10 transition-all hover:border-[#D4AF37]/40 flex flex-col md:flex-row justify-between items-center gap-12 shadow-2xl text-left"
   >
-    <div className="flex gap-12 items-center w-full md:w-auto">
+    <div className="flex gap-12 items-center w-full md:w-auto text-left">
       <div className="text-left">
-        <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-2">Registry ID</p>
-        <h3 className="text-3xl font-black font-mono tracking-tighter text-white">ATH-{order.id}</h3>
+        <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-2 text-left">Registry ID</p>
+        <h3 className="text-3xl font-black font-mono tracking-tighter text-white text-left">ATH-{order.id}</h3>
       </div>
       <div className={`px-6 py-3 border tracking-widest ${order.status === 'COMPLETED' ? 'border-green-500/30 text-green-500' : 'border-[#D4AF37]/30 text-[#D4AF37]'} bg-black/50 font-black text-[10px] uppercase flex items-center gap-3`}>
         <Clock size={14} /> {order.status || 'AUTHORIZED'}
       </div>
     </div>
-    <div className="flex-1 text-left space-y-4">
-      <div className="flex items-center gap-3 text-gray-400 font-bold text-[10px] uppercase tracking-widest">
+    <div className="flex-1 text-left space-y-4 text-left">
+      <div className="flex items-center gap-3 text-gray-400 font-bold text-[10px] uppercase tracking-widest text-left">
         <Activity size={16} className="text-[#D4AF37]" /> Deployment: {new Date(order.createdAt).toLocaleDateString()}
       </div>
-      <div className="flex items-center gap-3 text-gray-500 font-medium text-[10px] uppercase tracking-widest max-w-sm">
+      <div className="flex items-center gap-3 text-gray-500 font-medium text-[10px] uppercase tracking-widest max-w-sm text-left text-left">
         <MapPin size={16} /> {order.address || 'Standard Delivery Protocol'}
       </div>
     </div>
