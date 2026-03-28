@@ -11,8 +11,11 @@ const AdminOrders = () => {
   const fetchAllOrders = async () => {
     try {
       const res = await fetch("http://localhost:8080/api/orders/all");
-      const data = await res.json();
-      setOrders(data.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate)));
+      if (res.ok) {
+        const data = await res.json();
+        // Sorting by Date: Most recent hardware protocols first
+        setOrders(data.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate)));
+      }
     } catch (err) {
       toast.error("SYSTEM SYNC FAILURE");
     }
@@ -21,22 +24,29 @@ const AdminOrders = () => {
   useEffect(() => { fetchAllOrders(); }, []);
 
   const updateStatus = async (id, newStatus) => {
-    const loading = toast.loading(`Updating Protocol to ${newStatus}...`);
+    const loading = toast.loading(`Authorizing Logistics: ${newStatus}...`);
     try {
+      // Endpoint matched to OrderController @PatchMapping
       const res = await fetch(`http://localhost:8080/api/orders/update-status/${id}?status=${newStatus}`, {
         method: 'PATCH'
       });
+      
       if (res.ok) {
-        setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
-        toast.success("LOGISTICS UPDATED", { id: loading });
+        const updatedOrder = await res.json();
+        // Synchronizing local state with the Master Registry
+        setOrders(orders.map(o => o.id === id ? { ...o, status: updatedOrder.status } : o));
+        toast.success(`LOGISTICS UPDATED: ${newStatus}`, { id: loading });
+      } else {
+        toast.error("PROTOCOL DENIED", { id: loading });
       }
     } catch (err) {
       toast.error("GATEWAY ERROR", { id: loading });
     }
   };
 
+  // FINANCIAL AGGREGATE LOGIC
   const stats = {
-    totalValue: orders.reduce((acc, o) => acc + o.totalAmount, 0),
+    totalValue: Array.isArray(orders) ? orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0) : 0,
     pendingCount: orders.filter(o => o.status === 'PENDING').length,
     completedCount: orders.filter(o => o.status === 'COMPLETED').length
   };
@@ -50,11 +60,12 @@ const AdminOrders = () => {
       <div className="p-8 md:p-20">
         <header className="mb-16 flex justify-between items-end">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <p className="text-[#D4AF37] text-[10px] font-bold tracking-[0.6em] uppercase mb-4">Command Center</p>
-            <h1 className="text-6xl font-black uppercase tracking-tighter leading-none">Global <span className="text-transparent stroke-text">Orders</span></h1>
+            <p className="text-[#D4AF37] text-[10px] font-bold tracking-[0.6em] uppercase mb-4 text-left">Command Center</p>
+            <h1 className="text-6xl font-black uppercase tracking-tighter leading-none text-left">
+              Global <span className="text-transparent stroke-text">Orders</span>
+            </h1>
           </motion.div>
           
-          {/* FINANCIAL SUMMARY OVERLAY */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }}
@@ -102,17 +113,17 @@ const AdminOrders = () => {
                   <div className="p-4 bg-white/[0.03] text-[#D4AF37] rounded-full group-hover:bg-[#D4AF37]/10 transition-colors">
                     <Package size={20} />
                   </div>
-                  <div>
-                    <h3 className="font-mono font-bold text-lg tracking-widest uppercase">ATH-{order.id + 1000}</h3>
-                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">
+                  <div className="text-left">
+                    <h3 className="font-mono font-bold text-lg tracking-widest uppercase text-left">ATH-{order.id + 1000}</h3>
+                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1 text-left">
                       {new Date(order.orderDate).toLocaleString()}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex-1 px-10">
-                   <p className="text-[9px] text-gray-600 font-bold uppercase mb-1 tracking-widest">Logistics Destination</p>
-                   <p className="text-xs uppercase text-gray-300 truncate max-w-sm font-medium">{order.shippingAddress}</p>
+                <div className="flex-1 px-10 text-left">
+                   <p className="text-[9px] text-gray-600 font-bold uppercase mb-1 tracking-widest text-left">Logistics Destination</p>
+                   <p className="text-xs uppercase text-gray-300 truncate max-w-sm font-medium text-left">{order.shippingAddress}</p>
                 </div>
 
                 <div className="text-right mr-10">
