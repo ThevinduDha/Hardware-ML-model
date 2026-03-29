@@ -165,7 +165,8 @@ const CustomerDashboard = () => {
   // Function to trigger Secure Offer Filter
   const triggerSecureOffer = () => {
     setFilterMode('offers');
-    document.getElementById('market-registry-section').scrollIntoView({ behavior: 'smooth' });
+    const section = document.getElementById('market-registry-section');
+    if (section) section.scrollIntoView({ behavior: 'smooth' });
     toast.success("PROMOTIONAL ASSETS FILTERED", {
       icon: '🔥',
       style: { borderRadius: '0px', background: '#050505', color: '#D4AF37', border: '1px solid #D4AF37', fontSize: '10px', fontWeight: '900' }
@@ -289,7 +290,6 @@ const CustomerDashboard = () => {
         </motion.div>
       </main>
 
-      {/* CART MODAL (UNCHANGED) */}
       <AnimatePresence>
         {isCartOpen && (
           <>
@@ -328,7 +328,7 @@ const CustomerDashboard = () => {
                               <span className="text-xs font-mono font-bold w-4 text-center">{item.quantity}</span>
                               <Plus size={12} className="cursor-pointer hover:text-[#D4AF37]" onClick={() => updateCartQuantity(item.id, item.quantity + 1)} />
                             </div>
-                            <p className="font-mono text-base font-black text-left">LKR {((item.product?.discountedPrice || item.product?.price) * item.quantity).toLocaleString()}</p>
+                            <p className="font-mono text-base font-black text-left">LKR {((item.product?.discountedPrice || item.product?.price || 0) * item.quantity).toLocaleString()}</p>
                         </div>
                       </div>
                     </div>
@@ -338,7 +338,7 @@ const CustomerDashboard = () => {
 
               <div className="p-10 bg-white/[0.02] border-t border-white/10 text-left text-left">
                 <div className="flex justify-between items-end mb-10 text-left">
-                  <div className="text-left">
+                  <div className="text-left text-left">
                     <p className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-500 mb-3 text-left">Grand Total Valuation</p>
                     <p className="text-5xl font-black text-[#D4AF37] tracking-tighter text-left text-left">LKR {calculateTotal().toLocaleString()}</p>
                   </div>
@@ -361,7 +361,6 @@ const CustomerDashboard = () => {
   );
 };
 
-// NavItem, ProductCard (Unchanged but ensuring onClick paths are correct)
 const NavItem = ({ icon, label, active = false, onClick, variants }) => (
     <motion.button 
       variants={variants}
@@ -374,7 +373,6 @@ const NavItem = ({ icon, label, active = false, onClick, variants }) => (
         whileHover={{ height: '100%' }}
         className={`absolute left-0 top-0 w-[2px] bg-[#D4AF37] transition-all ${active ? 'h-full' : ''}`}
       />
-      
       <span className={active ? 'text-black' : 'group-hover:text-[#D4AF37] transition-colors'}>{icon}</span> 
       {label}
     </motion.button>
@@ -390,7 +388,7 @@ const ProductCard = ({ product, navigate, onAddToCart, isInitiallyCurated }) => 
   const discountPercent = hasDiscount ? Math.round(((product.price - product.discountedPrice) / product.price) * 100) : 0;
 
   const handleQuickPurchase = async () => {
-    const activePrice = hasDiscount ? product.discountedPrice : product.price;
+    const activePrice = hasDiscount ? (product.discountedPrice || 0) : (product.price || 0);
     localStorage.setItem("lastCartTotal", activePrice);
     navigate('/checkout');
   };
@@ -416,7 +414,7 @@ const ProductCard = ({ product, navigate, onAddToCart, isInitiallyCurated }) => 
       variants={{ initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 } }}
       className="group relative flex flex-col h-full bg-[#050505] border border-white/[0.03] transition-all duration-[0.8s] cubic-bezier(0.2, 1, 0.2, 1) hover:border-[#D4AF37]/40 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)] text-left"
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#080808] text-left text-left">
+      <div className="relative aspect-[4/5] overflow-hidden bg-[#080808] text-left">
         <button 
           onClick={handleToggleCurated} 
           className="absolute top-6 right-6 z-30 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-[-10px] group-hover:translate-y-0"
@@ -438,12 +436,12 @@ const ProductCard = ({ product, navigate, onAddToCart, isInitiallyCurated }) => 
         <img src={product.imageUrl} className="w-full h-full object-contain p-8 transition-transform duration-[3s] group-hover:scale-105 opacity-60 group-hover:opacity-100 filter grayscale group-hover:grayscale-0 text-left" alt={product.name} />
         
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/90 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-4 translate-y-4 group-hover:translate-y-0 text-left">
-           <button onClick={() => navigate(`/product/${product.id}`)} className="w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white text-white hover:text-black border border-white/10 transition-all rounded-full backdrop-blur-sm shadow-2xl"><Eye size={18} strokeWidth={1.5}/></button>
-           <button onClick={onAddToCart} className="w-12 h-12 flex items-center justify-center bg-[#D4AF37] hover:bg-white text-black border border-[#D4AF37] transition-all rounded-full shadow-[0_0_50px_rgba(212,175,55,0.4)]"><ShoppingCart size={18} strokeWidth={1.5}/></button>
+           <button onClick={() => navigate(`/product/${product.id}`)} className="w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-white text-white hover:text-black border border-white/10 transition-all rounded-full backdrop-blur-sm shadow-2xl text-left"><Eye size={18} strokeWidth={1.5}/></button>
+           <button onClick={onAddToCart} className="w-12 h-12 flex items-center justify-center bg-[#D4AF37] hover:bg-white text-black border border-[#D4AF37] transition-all rounded-full shadow-[0_0_50px_rgba(212,175,55,0.4)] text-left"><ShoppingCart size={18} strokeWidth={1.5}/></button>
         </div>
       </div>
 
-      <div className="p-8 flex flex-col flex-1 text-left relative text-left text-left">
+      <div className="p-8 flex flex-col flex-1 text-left relative text-left">
         <div className="mb-10 text-left">
             <p className="text-[#D4AF37] text-[7px] font-bold tracking-[0.5em] uppercase mb-4 opacity-40 group-hover:opacity-100 transition-opacity text-left">
               {product.category} REGISTRY
@@ -453,16 +451,17 @@ const ProductCard = ({ product, navigate, onAddToCart, isInitiallyCurated }) => 
             </h3>
         </div>
 
-        <div className="mt-auto space-y-8 text-left text-left">
+        <div className="mt-auto space-y-8 text-left">
           <div className="flex flex-col border-l border-white/10 pl-5 text-left">
             <span className="text-[7px] font-black text-gray-600 uppercase tracking-[0.4em] mb-2 text-left">Net Valuation</span>
             <div className="flex items-baseline gap-4 text-left">
               <span className="text-2xl font-mono font-medium text-white group-hover:text-[#D4AF37] transition-colors tracking-tighter text-left">
-                LKR {hasDiscount ? product.discountedPrice.toLocaleString() : product.price.toLocaleString()}
+                {/* NULL SAFETY APPLIED HERE */}
+                LKR {(hasDiscount ? (product.discountedPrice || 0) : (product.price || 0)).toLocaleString()}
               </span>
               {hasDiscount && (
                 <span className="text-sm text-gray-700 line-through font-mono italic opacity-80 decoration-[#D4AF37]/50 decoration-2 text-left">
-                  {product.price.toLocaleString()}
+                  {(product.price || 0).toLocaleString()}
                 </span>
               )}
             </div>
