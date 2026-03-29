@@ -19,6 +19,7 @@ import ActivePromotionList from '../components/ActivePromotionList';
 import PromotionNoticeManager from '../components/PromotionNoticeManager';
 import NoticeArchive from '../components/NoticeArchive';
 import Financials from './Financials'; // NEW: Import the page we just built
+import SystemConfig from './SystemConfig';
 
 // --- ANIMATION VARIANTS CONFIGURATION ---
 const panelVariants = {
@@ -96,17 +97,12 @@ const AdminDashboard = () => {
   const [promoRefreshTrigger, setPromoRefreshTrigger] = useState(0); 
   const [archiveRefresh, setArchiveRefresh] = useState(0);
 
-  // NEW: State for current modification target (UPDATE PART)
   const [editingPromo, setEditingPromo] = useState(null);
-
-  // NEW: State to hold the product selected from AI panel for auto-fill
   const [preSelectedProduct, setPreSelectedProduct] = useState(null);
 
-  // NEW: EFFECT TO HANDLE INBOUND NAVIGATION INSTRUCTIONS (Fix for Financials button)
   useEffect(() => {
     if (location.state && location.state.targetTab) {
       setActiveTab(location.state.targetTab);
-      // Clean up the history state so refreshing doesn't force the tab back
       window.history.replaceState({}, document.title);
     }
   }, [location]);
@@ -118,7 +114,6 @@ const AdminDashboard = () => {
     window.location.href = "/login";
   };
 
-  // HANDLER: Triggered when "Apply Discount" is clicked in the AI Panel
   const handleApplyDiscountFromAI = (product) => {
     setPreSelectedProduct(product);
     setActiveTab('promotions');
@@ -131,7 +126,6 @@ const AdminDashboard = () => {
   return (
     <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-[#D4AF37] selection:text-black overflow-hidden text-left">
       
-      {/* --- ELITE ANIMATED SIDEBAR --- */}
       <motion.aside 
         initial={{ x: -280 }} 
         animate={{ x: 0 }} 
@@ -164,7 +158,7 @@ const AdminDashboard = () => {
           <NavItem icon={<Users size={18}/>} label="Personnel Registry" active={activeTab === 'clients'} onClick={() => setActiveTab('clients')} />
           <NavItem icon={<ShieldAlert size={18}/>} label="Security Audit" onClick={() => navigate('/admin/audit-logs')} />
           <NavItem icon={<BarChart3 size={18}/>} label="Financials" active={activeTab === 'financials'} onClick={() => setActiveTab('financials')} />
-          <NavItem icon={<Settings size={18}/>} label="System Config" />
+          <NavItem icon={<Settings size={18}/>} label="System Config" active={activeTab === 'config'} onClick={() => setActiveTab('config')} />
         </nav>
 
         <div className="mt-auto pt-8 border-t border-white/5">
@@ -180,7 +174,6 @@ const AdminDashboard = () => {
       </motion.aside>
 
       <main className="flex-1 p-12 overflow-y-auto relative text-left">
-        {/* INTERACTIVE BACKGROUND AURA */}
         <motion.div 
           animate={{ scale: [1, 1.2, 1], opacity: [0.03, 0.07, 0.03] }}
           transition={{ duration: 10, repeat: Infinity }}
@@ -196,7 +189,7 @@ const AdminDashboard = () => {
               <p className="text-[#D4AF37] text-[10px] font-bold tracking-[0.6em] uppercase text-left">Protocol Status: Senior Admin</p>
             </div>
             <h1 className="text-6xl font-black uppercase tracking-tighter leading-none text-left">
-              {activeTab === 'broadcast' ? 'Broadcast' : activeTab === 'promotions' ? 'Promotion' : activeTab === 'financials' ? 'Fiscal' : 'Welcome,'} <span className="text-transparent stroke-text">{activeTab === 'broadcast' ? 'Hub' : activeTab === 'promotions' ? 'Registry' : activeTab === 'financials' ? 'Analysis' : user.name}</span>
+              {activeTab === 'broadcast' ? 'Broadcast' : activeTab === 'promotions' ? 'Promotion' : activeTab === 'financials' ? 'Fiscal' : activeTab === 'config' ? 'System' : 'Welcome,'} <span className="text-transparent stroke-text">{activeTab === 'broadcast' ? 'Hub' : activeTab === 'promotions' ? 'Registry' : activeTab === 'financials' ? 'Analysis' : activeTab === 'config' ? 'Config' : user.name}</span>
             </h1>
           </motion.div>
           
@@ -255,8 +248,8 @@ const AdminDashboard = () => {
           {activeTab === 'broadcast' && (
             <motion.div key="broadcast" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="space-y-12 text-left">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 text-left">
-                <section className="space-y-6 text-left text-left"><div className="flex items-center gap-3 text-left"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" /><h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 text-left">Internal Staff Protocol</h2></div><StaffNoticeManager onSuccess={() => setArchiveRefresh(prev => prev + 1)} /></section>
-                <section className="space-y-6 text-left text-left"><div className="flex items-center gap-3 text-left"><div className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse" /><h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#D4AF37] text-left">Customer Promotion Engine</h2></div><PromotionNoticeManager onSuccess={() => setArchiveRefresh(prev => prev + 1)} /></section>
+                <section className="space-y-6 text-left"><div className="flex items-center gap-3 text-left"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" /><h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 text-left">Internal Staff Protocol</h2></div><StaffNoticeManager onSuccess={() => setArchiveRefresh(prev => prev + 1)} /></section>
+                <section className="space-y-6 text-left"><div className="flex items-center gap-3 text-left"><div className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse" /><h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#D4AF37] text-left">Customer Promotion Engine</h2></div><PromotionNoticeManager onSuccess={() => setArchiveRefresh(prev => prev + 1)} /></section>
               </div>
               <motion.div variants={panelVariants}><NoticeArchive refreshTrigger={archiveRefresh} /></motion.div>
             </motion.div>
@@ -264,7 +257,7 @@ const AdminDashboard = () => {
 
           {activeTab === 'promotions' && (
             <motion.div key="promotions" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="space-y-12 text-left">
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-12 text-left text-left">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-12 text-left">
                 <div className="xl:col-span-7">
                    <PromotionManager 
                      preSelected={preSelectedProduct} 
@@ -288,7 +281,12 @@ const AdminDashboard = () => {
             </motion.div>
           )}
 
-          {/* NEW: FINANCIALS TAB INTEGRATION */}
+          {activeTab === 'config' && (
+            <motion.div key="config" initial="initial" animate="animate" exit="exit" variants={panelVariants}>
+              <SystemConfig />
+            </motion.div>
+          )}
+
           {activeTab === 'financials' && (
             <motion.div key="financials" initial="initial" animate="animate" exit="exit" variants={panelVariants}>
               <Financials />
