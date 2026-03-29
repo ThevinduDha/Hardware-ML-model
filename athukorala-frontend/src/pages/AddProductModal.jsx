@@ -6,7 +6,8 @@ import { toast } from 'react-hot-toast';
 import ImageUpload from '../components/ImageUpload';
 
 const AddProductModal = ({ isOpen, onClose }) => {
-  const { register, handleSubmit, reset, watch } = useForm();
+  // Added formState to detect validation errors
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [suppliers, setSuppliers] = useState([]);
 
@@ -41,6 +42,12 @@ const AddProductModal = ({ isOpen, onClose }) => {
   };
 
   const onSubmit = async (data) => {
+    // --- MANUAL VALIDATION OVERRIDE ---
+    if (!data.name || !data.category || !data.supplierId || !data.price || !data.stockQuantity) {
+      toast.error("PROTOCOL REJECTED: ALL FIELDS MANDATORY");
+      return;
+    }
+
     const finalData = {
       ...data,
       price: parseFloat(data.price),
@@ -49,6 +56,12 @@ const AddProductModal = ({ isOpen, onClose }) => {
       imageUrl: uploadedImageUrl || getDefaultIcon(data.category),
       supplier: data.supplierId ? { id: parseInt(data.supplierId) } : null
     };
+
+    // Double check for logic errors
+    if (finalData.price <= 0 || finalData.stockQuantity < 0) {
+        toast.error("VALUATION ERROR: INVALID NUMERIC DATA");
+        return;
+    }
 
     const loadingToast = toast.loading("Recording Asset...");
 
@@ -99,7 +112,13 @@ const AddProductModal = ({ isOpen, onClose }) => {
              <ImageUpload onUploadSuccess={(url) => setUploadedImageUrl(url)} />
           </div>
 
-          <InputGroup label="Product Name" icon={<Box size={16}/>} register={register("name")} placeholder="e.g. Nippon Paint Gold" />
+          <InputGroup 
+            label="Product Name" 
+            icon={<Box size={16}/>} 
+            register={register("name", { required: true })} 
+            placeholder="e.g. Nippon Paint Gold" 
+            error={errors.name}
+          />
           
           <div className="group">
             <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold block mb-3 text-left">Primary Supplier</label>
@@ -108,8 +127,8 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 <Truck size={16} />
               </div>
               <select 
-                {...register("supplierId")}
-                className="w-full bg-transparent border-b border-white/10 pl-8 py-3 focus:border-[#D4AF37] outline-none text-sm uppercase tracking-widest transition-all appearance-none text-white"
+                {...register("supplierId", { required: true })}
+                className={`w-full bg-transparent border-b pl-8 py-3 outline-none text-sm uppercase tracking-widest transition-all appearance-none text-white ${errors.supplierId ? 'border-red-500' : 'border-white/10 focus:border-[#D4AF37]'}`}
               >
                 <option value="" className="bg-[#080808]">Select Supplier...</option>
                 {suppliers.map(s => (
@@ -119,7 +138,6 @@ const AddProductModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* --- UPDATED: CATEGORY DROPDOWN --- */}
           <div className="group text-left">
             <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold block mb-3">Category</label>
             <div className="relative">
@@ -127,8 +145,8 @@ const AddProductModal = ({ isOpen, onClose }) => {
                 <ListTree size={16} />
               </div>
               <select 
-                {...register("category")}
-                className="w-full bg-transparent border-b border-white/10 pl-8 py-3 focus:border-[#D4AF37] outline-none text-sm uppercase tracking-widest transition-all appearance-none text-white cursor-pointer"
+                {...register("category", { required: true })}
+                className={`w-full bg-transparent border-b pl-8 py-3 outline-none text-sm uppercase tracking-widest transition-all appearance-none text-white cursor-pointer ${errors.category ? 'border-red-500' : 'border-white/10 focus:border-[#D4AF37]'}`}
               >
                 <option value="" className="bg-[#080808]">Select Category...</option>
                 {HARDWARE_CATEGORIES.map(cat => (
@@ -139,8 +157,22 @@ const AddProductModal = ({ isOpen, onClose }) => {
           </div>
           
           <div className="grid grid-cols-2 gap-6">
-            <InputGroup label="Unit Price" icon={<DollarSign size={16}/>} register={register("price")} placeholder="0.00" type="number" />
-            <InputGroup label="Quantity" icon={<Box size={16}/>} register={register("stockQuantity")} placeholder="0" type="number" />
+            <InputGroup 
+                label="Unit Price" 
+                icon={<DollarSign size={16}/>} 
+                register={register("price", { required: true, min: 0.01 })} 
+                placeholder="0.00" 
+                type="number" 
+                error={errors.price}
+            />
+            <InputGroup 
+                label="Quantity" 
+                icon={<Box size={16}/>} 
+                register={register("stockQuantity", { required: true, min: 0 })} 
+                placeholder="0" 
+                type="number" 
+                error={errors.stockQuantity}
+            />
           </div>
 
           <div className="group">
@@ -160,14 +192,14 @@ const AddProductModal = ({ isOpen, onClose }) => {
   );
 };
 
-const InputGroup = ({ label, icon, register, placeholder, type = "text" }) => (
+const InputGroup = ({ label, icon, register, placeholder, type = "text", error }) => (
   <div className="group">
     <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold block mb-3 text-left">{label}</label>
     <div className="relative text-left">
       <div className="absolute left-0 top-1/2 -translate-y-1/2 text-[#D4AF37]/50 group-focus-within:text-[#D4AF37] transition-colors">{icon}</div>
       <input 
         {...register} type={type} placeholder={placeholder} step="any"
-        className="w-full bg-transparent border-b border-white/10 pl-8 py-3 focus:border-[#D4AF37] outline-none transition-all text-sm uppercase tracking-widest placeholder:text-gray-800"
+        className={`w-full bg-transparent border-b pl-8 py-3 outline-none transition-all text-sm uppercase tracking-widest placeholder:text-gray-800 ${error ? 'border-red-500' : 'border-white/10 focus:border-[#D4AF37]'}`}
       />
     </div>
   </div>
