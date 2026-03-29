@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Shield, ShieldCheck, ShieldAlert, 
-  ArrowUp, ArrowDown, Search, MoreHorizontal, Activity 
+  ArrowUp, ArrowDown, MoreHorizontal, Activity 
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -51,28 +51,8 @@ const PersonnelRegistry = () => {
   );
 
   return (
-    <div className="space-y-8 text-left">
-      <header className="flex justify-between items-end mb-10">
-        <div>
-          <div className="flex items-center gap-3 mb-4 text-[#D4AF37]">
-            <ShieldCheck size={14} />
-            <p className="text-[10px] font-black uppercase tracking-[0.6em]">Permission Command</p>
-          </div>
-          <h1 className="text-6xl font-black uppercase tracking-tighter leading-none">
-            Personnel <span className="text-transparent stroke-text">Registry</span>
-          </h1>
-        </div>
-        
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#D4AF37]" size={16} />
-          <input 
-            type="text" 
-            placeholder="SEARCH PERSONNEL..." 
-            className="bg-white/5 border border-white/10 py-4 pl-12 pr-6 text-[10px] tracking-widest outline-none focus:border-[#D4AF37] w-80 uppercase font-black transition-all"
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </header>
+    <div className="space-y-8 text-left pt-10">
+      {/* REDUNDANT SEARCH BAR REMOVED: Managed by Dashboard Global Search */}
 
       <div className="grid grid-cols-1 gap-4">
         <AnimatePresence mode='popLayout'>
@@ -83,9 +63,9 @@ const PersonnelRegistry = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white/[0.02] border border-white/5 p-6 flex items-center justify-between group hover:border-[#D4AF37]/30 transition-all"
+              className="bg-white/[0.02] border border-white/5 p-6 flex items-center justify-between group hover:border-[#D4AF37]/30 transition-all shadow-xl"
             >
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 text-left">
                 <div className={`p-4 rounded-full ${
                   person.role === 'ADMIN' ? 'bg-[#D4AF37]/10 text-[#D4AF37]' : 
                   person.role === 'STAFF' ? 'bg-blue-500/10 text-blue-500' : 
@@ -96,15 +76,15 @@ const PersonnelRegistry = () => {
                    <User size={24} />}
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight text-white">{person.name}</h3>
-                  <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">{person.email}</p>
-                  <div className="flex items-center gap-3 mt-2">
+                <div className="text-left">
+                  <h3 className="text-lg font-black uppercase tracking-tight text-white text-left">{person.name}</h3>
+                  <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest text-left">{person.email}</p>
+                  <div className="flex items-center gap-3 mt-2 text-left">
                     <span className={`text-[8px] font-black px-2 py-0.5 border ${
                       person.role === 'ADMIN' ? 'border-[#D4AF37] text-[#D4AF37]' : 
                       person.role === 'STAFF' ? 'border-blue-500 text-blue-500' : 
                       'border-gray-600 text-gray-600'
-                    } uppercase tracking-[0.2em]`}>
+                    } uppercase tracking-[0.2em] text-left`}>
                       Tier: {person.role}
                     </span>
                   </div>
@@ -144,7 +124,7 @@ const PersonnelRegistry = () => {
 const ActionButton = ({ icon, label, color, onClick }) => (
   <button 
     onClick={onClick}
-    className={`flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 ${color} hover:bg-white/10 transition-all`}
+    className={`flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 ${color} hover:bg-white/10 transition-all shadow-md active:scale-95`}
   >
     {icon} {label}
   </button>
