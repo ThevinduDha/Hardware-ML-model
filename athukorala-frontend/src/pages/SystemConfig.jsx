@@ -7,6 +7,7 @@ import {
 import { toast } from 'react-hot-toast';
 
 const SystemConfig = () => {
+  // --- ALL STATE PRESERVED ---
   const [config, setConfig] = useState({
     systemName: "ATHUKORALA INDUSTRIAL",
     lowStockThreshold: 10,
@@ -15,7 +16,7 @@ const SystemConfig = () => {
     currency: "LKR"
   });
 
-  // --- SECURITY HANDSHAKE: Trigger on Component Mount ---
+  // --- SECURITY HANDSHAKE PRESERVED ---
   useEffect(() => {
     toast("CORE ACCESS GRANTED: SYSTEM PARAMETERS EXPOSED", {
       icon: '🔐',
@@ -31,10 +32,11 @@ const SystemConfig = () => {
     });
   }, []);
 
+  // --- SAVE HANDLER PRESERVED ---
   const handleSave = () => {
     const loading = toast.loading("RECONFIGURING CORE PROTOCOLS...");
     
-    // Logic: In a real app, you would fetch() to update a 'settings' table in MySQL
+    // Simulating the backend commitment
     setTimeout(() => {
       toast.success("SYSTEM PARAMETERS UPDATED & COMMITTED", { 
         id: loading,
@@ -44,19 +46,12 @@ const SystemConfig = () => {
   };
 
   return (
-    <div className="space-y-12 text-left">
-      <header className="mb-10 text-left">
-        <div className="flex items-center gap-3 mb-4 text-[#D4AF37]">
-          <Settings size={14} className="animate-spin-slow" />
-          <p className="text-[10px] font-black uppercase tracking-[0.6em]">Core Control Unit</p>
-        </div>
-        <h1 className="text-6xl font-black uppercase tracking-tighter leading-none">
-          System <span className="text-transparent stroke-text">Config</span>
-        </h1>
-      </header>
+    <div className="space-y-12 text-left pt-6">
+      {/* REDUNDANT HEADER REMOVED - AdminDashboard now handles the Title */}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 text-left">
-        {/* --- GLOBAL IDENTITY --- */}
+        
+        {/* --- GLOBAL IDENTITY SECTION --- */}
         <section className="p-10 border border-white/5 bg-white/[0.02] backdrop-blur-md relative overflow-hidden group shadow-2xl">
           <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12 group-hover:rotate-0 transition-transform duration-700">
             <Globe size={120} />
@@ -75,7 +70,11 @@ const SystemConfig = () => {
             
             <div className="grid grid-cols-2 gap-4">
                <div className="text-left">
-                 <ConfigInput label="Base Currency" value={config.currency} onChange={(v) => setConfig({...config, currency: v.toUpperCase()})} />
+                 <ConfigInput 
+                    label="Base Currency" 
+                    value={config.currency} 
+                    onChange={(v) => setConfig({...config, currency: v.toUpperCase()})} 
+                 />
                </div>
                <div className="text-left flex flex-col justify-end">
                  <label className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-2">Protocol Status</label>
@@ -96,7 +95,7 @@ const SystemConfig = () => {
           </div>
         </section>
 
-        {/* --- AUTOMATION THRESHOLDS --- */}
+        {/* --- THRESHOLD PROTOCOLS SECTION --- */}
         <section className="p-10 border border-white/5 bg-white/[0.02] backdrop-blur-md shadow-2xl relative group text-left">
           <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
             <Database size={100} />
@@ -137,6 +136,7 @@ const SystemConfig = () => {
         </section>
       </div>
 
+      {/* --- MASTER SAVE BUTTON --- */}
       <div className="flex items-center gap-6">
         <button 
             onClick={handleSave}
@@ -153,6 +153,8 @@ const SystemConfig = () => {
     </div>
   );
 };
+
+// --- HELPER COMPONENTS PRESERVED ---
 
 const ConfigInput = ({ label, value, onChange }) => (
   <div className="text-left group">
