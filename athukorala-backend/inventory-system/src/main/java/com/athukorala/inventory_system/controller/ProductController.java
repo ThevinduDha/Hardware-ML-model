@@ -4,6 +4,7 @@ import com.athukorala.inventory_system.entity.Product;
 import com.athukorala.inventory_system.entity.AuditLog;
 import com.athukorala.inventory_system.repository.ProductRepository;
 import com.athukorala.inventory_system.repository.AuditLogRepository;
+import com.athukorala.inventory_system.service.ProductService;
 import com.athukorala.inventory_system.service.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,24 +26,26 @@ public class ProductController {
     private final ProductRepository productRepository;
     private final AuditLogRepository auditLogRepository;
     private final PromotionService promotionService;
+    private final ProductService productService;
 
     @Autowired
     public ProductController(ProductRepository productRepository,
                              AuditLogRepository auditLogRepository,
-                             PromotionService promotionService) {
+                             PromotionService promotionService,
+                             ProductService productService) {
         this.productRepository = productRepository;
         this.auditLogRepository = auditLogRepository;
         this.promotionService = promotionService;
+        this.productService = productService;
     }
 
-    // --- UPDATED: FULL UPDATE PROTOCOL ---
-    @PutMapping("/update/{id}") // Standardized endpoint for your React Frontend
+    // --- ADMINISTRATIVE PROTOCOLS: UPDATE ---
+    @PutMapping("/update/{id}")
     @Transactional
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Asset not found for update: ID " + id));
 
-        // Registry Data Synchronization
         product.setName(productDetails.getName());
         product.setCategory(productDetails.getCategory());
         product.setPrice(productDetails.getPrice());
@@ -49,14 +53,12 @@ public class ProductController {
         product.setDescription(productDetails.getDescription());
         product.setImageUrl(productDetails.getImageUrl());
 
-        // Ensure reorder level is maintained or updated
         if(productDetails.getReorderLevel() > 0) {
             product.setReorderLevel(productDetails.getReorderLevel());
         }
 
         Product updatedProduct = productRepository.save(product);
 
-        // Security Protocol Logging
         AuditLog log = new AuditLog();
         log.setAction("INVENTORY_MODIFICATION");
         log.setPerformedBy("ADMIN");
@@ -67,7 +69,7 @@ public class ProductController {
         return ResponseEntity.ok(updatedProduct);
     }
 
-    // --- CREATE PROTOCOL ---
+    // --- ADMINISTRATIVE PROTOCOLS: CREATE ---
     @PostMapping("/add")
     public ResponseEntity<Product> addProduct(@RequestBody Product product) {
         if (product.getReorderLevel() <= 0) {
@@ -89,7 +91,6 @@ public class ProductController {
     @GetMapping("/all")
     public ResponseEntity<List<Product>> getAllProducts() {
         List<Product> products = productRepository.findAll();
-        // Sync Real-time Discount Valuations
         products.forEach(p -> p.setDiscountedPrice(promotionService.calculateDiscountedPrice(p)));
         return ResponseEntity.ok(products);
     }
@@ -110,27 +111,42 @@ public class ProductController {
         return ResponseEntity.ok(lowStock);
     }
 
+    // --- OPERATIONAL SYNC: CONSOLIDATED ADJUST STOCK (Audit-Ready) ---
     @PatchMapping("/{id}/adjust-stock")
     @Transactional
-    public ResponseEntity<Product> adjustStock(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Asset not found"));
+    public ResponseEntity<?> adjustStock(
+            @PathVariable Long id,
+            @RequestParam int delta,
+            @RequestParam(defaultValue = "OPERATOR") String staffName) {
+        try {
+            // 1. Business Logic through Service
+            Product updatedProduct = productService.adjustStock(id, delta);
 
-        int amount = Integer.parseInt(payload.get("amount").toString());
-        String adminName = payload.getOrDefault("adminName", "System Admin").toString();
+            // 2. Industrial Security Logging
+            AuditLog log = new AuditLog();
+            log.setAction("STOCK_SYNC");
+            log.setPerformedBy(staffName);
 
-        product.setStockQuantity(product.getStockQuantity() + amount);
-        Product savedProduct = productRepository.save(product);
+            String adjustmentType = delta > 0 ? "+" : "";
+            log.setDetails(String.format("STOCK ADJUSTMENT: %s | DELTA: %s%d | NEW TOTAL: %d",
+                    updatedProduct.getName(), adjustmentType, delta, updatedProduct.getStockQuantity()));
 
-        AuditLog log = new AuditLog();
-        log.setAction("STOCK_ADJUSTMENT");
-        log.setPerformedBy(adminName);
-        log.setDetails("STOCK MODIFIED: " + product.getName() + " | ADJUST: " + amount + " | TOTAL: " + product.getStockQuantity());
-        log.setTimestamp(LocalDateTime.now());
-        auditLogRepository.save(log);
+            log.setTimestamp(LocalDateTime.now());
+            auditLogRepository.save(log);
 
-        return ResponseEntity.ok(savedProduct);
+            // 3. Structured Response
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("newQuantity", updatedProduct.getStockQuantity());
+            response.put("message", "REGISTRY SYNCHRONIZED & LOGGED");
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
+    // --- ADMINISTRATIVE PROTOCOLS: DELETE ---
     @DeleteMapping("/{id}")
     @Transactional
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
