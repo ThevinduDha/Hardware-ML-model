@@ -80,12 +80,19 @@ mvn spring-boot:run
 
 ## 👨‍💻 CORE ARCHITECT
 
-**ThevinduDha and the team **  
+**ThevinduDha and Team**
+
 - 🎓 Data Science Undergraduates  
 - 🌍 Sri Lanka  
 - 🛠️ Specialized in DevOps & Smart ERP Development  
 
----
+### 👥 Team Members
+- ThevinduDha  
+- Dinuli  
+- Dulashee  
+- Bashitha  
+- Hirunima  
+- Ashini  
 
 <p align="center">
   <img src="https://capsule-render.vercel.app/render?type=waving&color=D4AF37&height=100&section=footer" />
