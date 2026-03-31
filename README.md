@@ -60,7 +60,7 @@ We have integrated a Python-based AI microservice to transform static data into 
 * **Broadcast Hub:** Dual communication system for Staff internal notices and Customer alerts.
 * **Audit Registry:** A permanent, live feed of all administrative system integrity logs.
 
----
+
 
 ## 🎬 SYSTEM INITIALIZATION
 
@@ -68,3 +68,27 @@ We have integrated a Python-based AI microservice to transform static data into 
 ```bash
 cd athukorala-backend
 mvn spring-boot:run
+```
+
+## 🔒 SECURITY PROTOCOL
+
+- **JWT Token Security:** Tokens have short expiration times and are strictly verified on every API request.  
+- **Zero-Inference RBAC:** Backend verifies roles before granting access to sensitive business endpoints.  
+- **Data Integrity:** Protection against SQL Injection and unauthorized registry access.  
+
+---
+
+## 👨‍💻 CORE ARCHITECT
+
+**ThevinduDha and the team **  
+- 🎓 Data Science Undergraduates  
+- 🌍 Sri Lanka  
+- 🛠️ Specialized in DevOps & Smart ERP Development  
+
+---
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/render?type=waving&color=D4AF37&height=100&section=footer" />
+</p>
+
+---
