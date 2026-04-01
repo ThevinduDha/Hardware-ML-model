@@ -11,9 +11,9 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false); // NEW: Success state
+  const [isSuccess, setIsSuccess] = useState(false); 
   const [totalAmount, setTotalAmount] = useState(0);
-  const [orderId, setOrderId] = useState(""); // NEW: To store generated order ID
+  const [orderId, setOrderId] = useState(""); 
 
   const [formData, setFormData] = useState({
     address: '',
@@ -23,13 +23,12 @@ const CheckoutPage = () => {
     cvv: ''
   });
 
-  // Calculate total from cart data passed via navigation or localStorage
   useEffect(() => {
     const savedTotal = localStorage.getItem("lastCartTotal") || "0";
     setTotalAmount(parseFloat(savedTotal));
   }, []);
 
-  // --- PREMIUM FORMATTING LOGIC ---
+  // --- PREMIUM FORMATTING & VALIDATION LOGIC ---
   const formatCardNumber = (value) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
     const matches = v.match(/\d{4,16}/g);
@@ -43,23 +42,54 @@ const CheckoutPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
     if (name === 'cardNumber') {
       setFormData({ ...formData, [name]: formatCardNumber(value) });
-    } else if (name === 'expiry') {
-      let v = value.replace(/\D/g, '');
+    } 
+    else if (name === 'expiry') {
+      let v = value.replace(/\D/g, ''); // Remove non-digits
+      
+      // 1. Month Logic (First two digits)
+      if (v.length >= 2) {
+        const month = parseInt(v.substring(0, 2));
+        if (month < 1 || month > 12) {
+          toast.error("INVALID MONTH: MUST BE 01-12");
+          return;
+        }
+      }
+
+      // 2. Year & Expiry Logic (Comparing against April 2026)
+      if (v.length === 4) {
+        const month = parseInt(v.substring(0, 2));
+        const year = parseInt(v.substring(2, 4));
+        const currentYear = 26;
+        const currentMonth = 4; // April
+
+        if (year < currentYear) {
+          toast.error("INVALID YEAR: CARD EXPIRED");
+          return;
+        }
+
+        if (year === currentYear && month < currentMonth) {
+          toast.error("PROTOCOL REJECTED: CARD EXPIRED THIS YEAR");
+          return;
+        }
+      }
+
+      // 3. Formatting
       if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2, 4);
       setFormData({ ...formData, [name]: v.substring(0, 5) });
-    } else {
+    } 
+    else {
       setFormData({ ...formData, [name]: value });
     }
   };
 
-  // --- SMART SRI LANKAN PHONE VALIDATION ---
   const isPhoneValid = (num) => {
     const cleanNum = num.trim();
-    if (cleanNum.startsWith("+94")) return cleanNum.length === 12; // +94771234567
-    if (cleanNum.startsWith("94")) return cleanNum.length === 11;  // 94771234567
-    if (cleanNum.startsWith("07")) return cleanNum.length === 10;  // 0771234567
+    if (cleanNum.startsWith("+94")) return cleanNum.length === 12; 
+    if (cleanNum.startsWith("94")) return cleanNum.length === 11;  
+    if (cleanNum.startsWith("07")) return cleanNum.length === 10;  
     return false;
   };
 
@@ -95,23 +125,20 @@ const CheckoutPage = () => {
           const data = await response.json();
           setOrderId(data.id || `ATH-${Math.floor(Math.random()*9000)}`);
           toast.success("TRANSACTION VERIFIED", { id: loadingToast });
-          
-          // Trigger Success View instead of immediate navigation
           setIsSuccess(true); 
         } else {
-          toast.error("INVENTORY SYNC FAILURE: STOCK DEPLETED", { id: loadingToast });
+          toast.error("INVENTORY SYNC FAILURE", { id: loadingToast });
         }
     } catch (err) {
-        toast.error("GATEWAY TIMEOUT: CHECK BACKEND", { id: loadingToast });
+        toast.error("GATEWAY TIMEOUT", { id: loadingToast });
     } finally {
         setIsProcessing(false);
     }
   };
 
-  // --- NEW: ORDER CONFIRMATION VIEW ---
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-8 font-sans overflow-hidden">
+      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-8 font-sans overflow-hidden text-left">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/5 blur-[120px] rounded-full -z-10" />
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
@@ -166,14 +193,14 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-8 md:p-20 font-sans selection:bg-[#D4AF37] selection:text-black">
+    <div className="min-h-screen bg-[#050505] text-white p-8 md:p-20 font-sans selection:bg-[#D4AF37] selection:text-black text-left">
       <button onClick={() => navigate(-1)} className="group flex items-center gap-2 text-gray-500 hover:text-[#D4AF37] transition-all mb-12 uppercase text-[10px] font-bold tracking-widest">
         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform"/> BACK TO REGISTRY
       </button>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-20">
         
-        {/* LEFT: LOGISTICS & DATA ENTRY (7 COLS) */}
+        {/* LEFT: LOGISTICS & DATA ENTRY */}
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-7">
           <header className="mb-16">
             <div className="flex items-center gap-3 mb-4">
@@ -207,9 +234,6 @@ const CheckoutPage = () => {
                     className={`w-full bg-white/[0.02] border p-6 outline-none text-xs tracking-[0.3em] uppercase transition-all ${formData.phone && !isPhoneValid(formData.phone) ? 'border-red-500/50' : 'border-white/10 focus:border-[#D4AF37]/50'}`}
                     placeholder="07XXXXXXXX OR +94XXXXXXXXX"
                   />
-                  {formData.phone && !isPhoneValid(formData.phone) && (
-                    <p className="text-red-500 text-[8px] mt-2 font-bold tracking-widest uppercase italic text-left">Invalid Sri Lankan Format detected</p>
-                  )}
                 </div>
               </div>
             </section>
@@ -230,7 +254,7 @@ const CheckoutPage = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-8 text-left">
                   <div>
-                    <label className="text-[9px] uppercase tracking-[0.2em] text-gray-600 font-black block mb-4">Expiry Date</label>
+                    <label className="text-[9px] uppercase tracking-[0.2em] text-gray-600 font-black block mb-4">Expiry Date (MM/YY)</label>
                     <input required name="expiry" value={formData.expiry} onChange={handleInputChange} placeholder="MM/YY" className="w-full bg-black border border-white/10 p-6 focus:border-[#D4AF37]/50 outline-none text-xs font-mono" />
                   </div>
                   <div>
@@ -243,13 +267,11 @@ const CheckoutPage = () => {
           </form>
         </motion.div>
 
-        {/* RIGHT: FLOATING SUMMARY (5 COLS) */}
+        {/* RIGHT: FLOATING SUMMARY */}
         <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-5">
           <div className="sticky top-20 bg-[#D4AF37]/5 border border-[#D4AF37]/20 p-12 backdrop-blur-xl relative overflow-hidden text-left">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#D4AF37]"></div>
-            
             <h3 className="text-xs font-black tracking-[0.4em] uppercase text-[#D4AF37] mb-12">Authorization Summary</h3>
-            
             <div className="space-y-6 mb-12 border-b border-[#D4AF37]/10 pb-12">
               <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400">
                 <span>Network Latency</span>
@@ -261,9 +283,9 @@ const CheckoutPage = () => {
               </div>
             </div>
 
-            <div className="mb-12">
+            <div className="mb-12 text-left">
                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-2">Final Authorized Amount</p>
-               <h2 className="text-5xl font-black text-white tracking-tighter">LKR {totalAmount.toLocaleString()}</h2>
+               <h2 className="text-5xl font-black text-white tracking-tighter text-left">LKR {totalAmount.toLocaleString()}</h2>
             </div>
 
             <button 
