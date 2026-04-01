@@ -205,6 +205,19 @@ const AuthPage = () => {
                 </span>
               </div>
 
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className="group flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/40 transition-all text-xs tracking-[0.25em] uppercase text-gray-300 hover:text-[#D4AF37]"
+                >
+                  <span className="group-hover:-translate-x-1 transition-transform">
+                    ←
+                  </span>
+                  Back to Home
+                </button>
+              </div>
+
               <motion.h2
                 key={isLogin ? 'login-title' : 'signup-title'}
                 initial={{ opacity: 0, y: 15 }}
@@ -325,10 +338,7 @@ const AuthPage = () => {
                   )}
                 </AnimatePresence>
 
-                <motion.div
-                  whileFocus={{ scale: 1.01 }}
-                  className="relative"
-                >
+                <motion.div whileFocus={{ scale: 1.01 }} className="relative">
                   <input
                     {...register('email', {
                       required: 'Identifier is required',
@@ -347,10 +357,7 @@ const AuthPage = () => {
                   )}
                 </motion.div>
 
-                <motion.div
-                  whileFocus={{ scale: 1.01 }}
-                  className="relative"
-                >
+                <motion.div whileFocus={{ scale: 1.01 }} className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     {...register(
