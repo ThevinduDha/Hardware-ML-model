@@ -1,21 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, Package, Users, Settings, LogOut, 
-  Activity, BarChart3, Bell, Search, ShieldCheck, 
-  TrendingUp, ArrowUpRight, Globe, ShieldAlert, Clock,
-  Percent, Tag, Megaphone, Send, ChevronRight, X, Briefcase
+import {
+  LayoutDashboard,
+  Package,
+  Users,
+  Settings,
+  LogOut,
+  Activity,
+  BarChart3,
+  Bell,
+  Search,
+  ArrowUpRight,
+  ShieldAlert,
+  Tag,
+  Megaphone,
+  ChevronRight,
+  Briefcase,
+  Boxes,
+  Wallet,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-// --- COMPONENTS ---
 import AddProductModal from './AddProductModal';
 import InventoryList from './InventoryList';
 import LowStockWidget from '../components/LowStockWidget';
 import PersonnelRegistry from './PersonnelRegistry';
 import StaffNoticeManager from '../components/StaffNoticeManager';
-import DiscountSuggestionPanel from '../components/DiscountSuggestionPanel'; 
+import DiscountSuggestionPanel from '../components/DiscountSuggestionPanel';
 import PromotionManager from '../components/PromotionManager';
 import ActivePromotionList from '../components/ActivePromotionList';
 import PromotionNoticeManager from '../components/PromotionNoticeManager';
@@ -24,51 +38,115 @@ import Financials from './Financials';
 import SystemConfig from './SystemConfig';
 import SupplierRegistry from './SupplierRegistry';
 
-// --- ANIMATION VARIANTS ---
-const panelVariants = {
-  initial: { opacity: 0, y: 20, filter: 'blur(10px)' },
-  animate: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.6, ease: "circOut" } },
-  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.3 } }
+const pageTransition = {
+  initial: { opacity: 0, y: 20 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: 'easeOut' }
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    transition: { duration: 0.2 }
+  }
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 22 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, ease: 'easeOut' }
+  }
+};
+
+const staggerWrap = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.08
+    }
+  }
 };
 
 const AuditPreviewWidget = () => {
   const [recentLogs, setRecentLogs] = useState([]);
+
   useEffect(() => {
     const fetchLogs = () => {
-      fetch("http://localhost:8080/api/audit/logs")
-        .then(res => res.json())
-        .then(data => setRecentLogs(Array.isArray(data) ? data.slice(0, 4) : []))
-        .catch(err => console.error("Audit Stream Offline"));
+      fetch('http://localhost:8080/api/audit/logs')
+        .then((res) => res.json())
+        .then((data) => setRecentLogs(Array.isArray(data) ? data.slice(0, 4) : []))
+        .catch(() => console.error('Audit Stream Offline'));
     };
+
     fetchLogs();
-    const interval = setInterval(fetchLogs, 10000); 
+    const interval = setInterval(fetchLogs, 10000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <motion.div variants={panelVariants} className="p-10 border border-white/5 bg-white/[0.02] backdrop-blur-md relative overflow-hidden group min-h-[400px] shadow-2xl">
-      <motion.div animate={{ height: ["20%", "100%", "20%"] }} transition={{ duration: 5, repeat: Infinity, ease: "linear" }} className="absolute top-0 left-0 w-[2px] bg-[#D4AF37] opacity-50" />
-      <div className="flex justify-between items-center mb-10 text-left">
-        <h3 className="text-xs font-black tracking-[0.4em] uppercase text-gray-400">System Integrity • Live Feed</h3>
-        <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-[9px] font-bold text-green-500 tracking-widest uppercase">Live Data</span>
+    <motion.div
+      variants={fadeUp}
+      className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-7 lg:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.28)] relative overflow-hidden"
+    >
+      <motion.div
+        animate={{ height: ['18%', '100%', '18%'] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+        className="absolute top-0 left-0 w-[2px] bg-[#D4AF37] opacity-50"
+      />
+
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
+            System Integrity
+          </p>
+          <h3 className="text-2xl font-bold text-white mt-2">Live Audit Feed</h3>
+        </div>
+
+        <div className="flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1.5">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span className="text-[11px] font-semibold text-green-400">Live Data</span>
         </div>
       </div>
-      <div className="space-y-6 text-left">
+
+      <div className="space-y-4">
         <AnimatePresence mode="popLayout">
-          {recentLogs.length > 0 ? recentLogs.map((log, i) => (
-            <motion.div key={log.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex justify-between items-center border-b border-white/5 pb-4 group cursor-pointer hover:border-[#D4AF37]/30 transition-all text-left">
-              <div className="flex gap-5 items-center text-left">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] group-hover:scale-150 transition-transform" />
-                <div className="text-left">
-                  <p className="text-sm font-bold tracking-tight uppercase group-hover:text-[#D4AF37] transition-colors text-left">{log.action}</p>
-                  <p className="text-[9px] text-gray-600 font-bold tracking-widest uppercase text-left">{log.performedBy} — {log.details}</p>
+          {recentLogs.length > 0 ? (
+            recentLogs.map((log, i) => (
+              <motion.div
+                key={log.id}
+                initial={{ opacity: 0, x: -14 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className="rounded-2xl border border-white/6 bg-black/20 px-4 py-4 hover:border-[#D4AF37]/25 transition-all"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-2 w-2 h-2 rounded-full bg-[#D4AF37]" />
+                    <div>
+                      <p className="text-sm font-semibold text-white">{log.action}</p>
+                      <p className="text-xs text-gray-400 mt-1 break-words">
+                        {log.performedBy} — {log.details}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-medium text-gray-500 whitespace-nowrap">
+                    {new Date(log.timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
                 </div>
-              </div>
-              <span className="text-[9px] font-mono text-gray-500 uppercase">{new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-            </motion.div>
-          )) : ( <p className="text-[10px] text-gray-600 uppercase tracking-widest text-center py-20 italic">Monitoring encrypted streams...</p> )}
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 italic py-16 text-center">
+              Monitoring encrypted streams...
+            </p>
+          )}
         </AnimatePresence>
       </div>
     </motion.div>
@@ -78,12 +156,15 @@ const AuditPreviewWidget = () => {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('command'); 
-  const [promoRefreshTrigger, setPromoRefreshTrigger] = useState(0); 
+  const [activeTab, setActiveTab] = useState('command');
+  const [promoRefreshTrigger, setPromoRefreshTrigger] = useState(0);
   const [archiveRefresh, setArchiveRefresh] = useState(0);
   const [editingPromo, setEditingPromo] = useState(null);
+  const [editingNotice, setEditingNotice] = useState(null);
   const [preSelectedProduct, setPreSelectedProduct] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (location.state && location.state.targetTab) {
@@ -92,201 +173,607 @@ const AdminDashboard = () => {
     }
   }, [location]);
 
-  const user = JSON.parse(localStorage.getItem("user") || '{"name":"Administrator"}');
+  const user = JSON.parse(localStorage.getItem('user') || '{"name":"Administrator"}');
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/login";
+    window.location.href = '/login';
   };
 
   const handleApplyDiscountFromAI = (product) => {
     setPreSelectedProduct(product);
     setActiveTab('promotions');
     toast.success(`AUTHORIZING DISCOUNT FOR: ${product.name}`, {
-        icon: '⚡',
-        style: { borderRadius: '0px', background: '#050505', color: '#D4AF37', border: '1px solid #D4AF37', fontSize: '10px', fontWeight: '900' }
+      icon: '⚡',
+      style: {
+        borderRadius: '14px',
+        background: '#050505',
+        color: '#D4AF37',
+        border: '1px solid #D4AF37',
+        fontSize: '12px',
+        fontWeight: '800'
+      }
     });
   };
 
+  const renderHeaderText = () => {
+    switch (activeTab) {
+      case 'clients':
+        return {
+          eyebrow: 'Personnel Management',
+          title: 'Personnel Registry',
+          sub: 'Manage people, roles, records, and staff operations.'
+        };
+      case 'financials':
+        return {
+          eyebrow: 'Financial Intelligence',
+          title: 'Financial Overview',
+          sub: 'Track business revenue, performance, and monetary activity.'
+        };
+      case 'config':
+        return {
+          eyebrow: 'System Configuration',
+          title: 'System Control',
+          sub: 'Adjust system settings and configuration controls.'
+        };
+      case 'broadcast':
+        return {
+          eyebrow: 'Broadcast Hub',
+          title: 'Announcements Center',
+          sub: 'Manage staff notices, promotions, and communication streams.'
+        };
+      case 'promotions':
+        return {
+          eyebrow: 'Promotions & Deals',
+          title: 'Promotion Registry',
+          sub: 'Create, update, and monitor customer-facing campaigns.'
+        };
+      case 'inventory':
+        return {
+          eyebrow: 'Inventory Stock',
+          title: 'Inventory Management',
+          sub: 'Track stock, products, and warehouse availability.'
+        };
+      case 'suppliers':
+        return {
+          eyebrow: '',
+          title: '',
+          sub: ''
+        };
+      default:
+        return {
+          eyebrow: 'Senior Admin Protocol',
+          title: `Welcome, ${user.name}`,
+          sub: 'Monitor operations, analytics, stock, and system activity.'
+        };
+    }
+  };
+
+  const header = renderHeaderText();
+
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white font-sans selection:bg-[#D4AF37] selection:text-black overflow-hidden text-left">
-      
-      {/* --- SIDEBAR --- */}
-      <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} transition={{ type: "spring", damping: 20 }} className="w-72 border-r border-white/5 bg-black/40 backdrop-blur-3xl p-8 flex flex-col gap-10 relative z-50 h-screen sticky top-0">
-        <div className="flex items-center gap-4 px-2 text-left">
-          <motion.div animate={{ boxShadow: ["0 0 10px rgba(212,175,55,0.1)", "0 0 30px rgba(212,175,55,0.4)", "0 0 10px rgba(212,175,55,0.1)"], scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }} transition={{ duration: 4, repeat: Infinity }} className="p-2 bg-[#D4AF37] rounded-sm shadow-2xl">
-            <Activity className="text-black" size={24} />
-          </motion.div>
-          <div className="flex flex-col text-left">
-            <span className="font-black tracking-[0.3em] uppercase text-sm text-left">Athukorala</span>
-            <span className="text-[7px] font-bold text-[#D4AF37] tracking-[0.2em] uppercase mt-1 text-left">Industrial OS</span>
+    <div className="min-h-screen bg-[#050505] text-white flex overflow-hidden">
+      {/* SIDEBAR */}
+      <motion.aside
+        animate={{ width: sidebarCollapsed ? 96 : 288 }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+        className="h-screen sticky top-0 border-r border-white/10 bg-black/45 backdrop-blur-2xl z-40 flex flex-col"
+      >
+        <div className="px-4 py-5 border-b border-white/6">
+          <div className="flex items-center justify-between gap-3">
+            <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'justify-center w-full' : ''}`}>
+              <motion.div
+                animate={{
+                  boxShadow: [
+                    '0 0 8px rgba(212,175,55,0.10)',
+                    '0 0 22px rgba(212,175,55,0.35)',
+                    '0 0 8px rgba(212,175,55,0.10)'
+                  ]
+                }}
+                transition={{ duration: 3.2, repeat: Infinity }}
+                className="w-11 h-11 rounded-2xl bg-[#D4AF37] flex items-center justify-center shrink-0"
+              >
+                <Activity className="text-black" size={22} />
+              </motion.div>
+
+              {!sidebarCollapsed && (
+                <div>
+                  <p className="text-base font-bold tracking-tight">Athukorala</p>
+                  <p className="text-xs text-[#D4AF37] font-medium mt-0.5">Industrial OS</p>
+                </div>
+              )}
+            </div>
+
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300"
+              >
+                <PanelLeftClose size={16} />
+              </button>
+            )}
           </div>
+
+          {sidebarCollapsed && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300"
+              >
+                <PanelLeftOpen size={16} />
+              </button>
+            </div>
+          )}
         </div>
 
-        <nav className="flex flex-col gap-2">
-          <NavItem icon={<LayoutDashboard size={18}/>} label="Command Center" active={activeTab === 'command'} onClick={() => setActiveTab('command')} />
-          <NavItem icon={<Megaphone size={18}/>} label="Broadcast Hub" active={activeTab === 'broadcast'} onClick={() => setActiveTab('broadcast')} />
-          <NavItem icon={<Package size={18}/>} label="Inventory Stock" active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} />
-          <NavItem icon={<Briefcase size={18}/>} label="Supplier Registry" active={activeTab === 'suppliers'} onClick={() => setActiveTab('suppliers')} />
-          <NavItem icon={<Tag size={18}/>} label="Promotions & Deals" active={activeTab === 'promotions'} onClick={() => setActiveTab('promotions')} />
-          <NavItem icon={<Users size={18}/>} label="Personnel Registry" active={activeTab === 'clients'} onClick={() => setActiveTab('clients')} />
-          <NavItem icon={<ShieldAlert size={18}/>} label="Security Audit" onClick={() => navigate('/admin/audit-logs')} />
-          <NavItem icon={<BarChart3 size={18}/>} label="Financials" active={activeTab === 'financials'} onClick={() => setActiveTab('financials')} />
-          <NavItem icon={<Settings size={18}/>} label="System Config" active={activeTab === 'config'} onClick={() => setActiveTab('config')} />
+        <nav className="px-3 py-4 flex-1 overflow-y-auto space-y-2">
+          <NavItem
+            icon={<LayoutDashboard size={18} />}
+            label="Command Center"
+            active={activeTab === 'command'}
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveTab('command')}
+          />
+          <NavItem
+            icon={<Megaphone size={18} />}
+            label="Broadcast Hub"
+            active={activeTab === 'broadcast'}
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveTab('broadcast')}
+          />
+          <NavItem
+            icon={<Package size={18} />}
+            label="Inventory Stock"
+            active={activeTab === 'inventory'}
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveTab('inventory')}
+          />
+          <NavItem
+            icon={<Briefcase size={18} />}
+            label="Supplier Registry"
+            active={activeTab === 'suppliers'}
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveTab('suppliers')}
+          />
+          <NavItem
+            icon={<Tag size={18} />}
+            label="Promotions & Deals"
+            active={activeTab === 'promotions'}
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveTab('promotions')}
+          />
+          <NavItem
+            icon={<Users size={18} />}
+            label="Personnel Registry"
+            active={activeTab === 'clients'}
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveTab('clients')}
+          />
+          <NavItem
+            icon={<ShieldAlert size={18} />}
+            label="Security Audit"
+            collapsed={sidebarCollapsed}
+            onClick={() => navigate('/admin/audit-logs')}
+          />
+          <NavItem
+            icon={<BarChart3 size={18} />}
+            label="Financials"
+            active={activeTab === 'financials'}
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveTab('financials')}
+          />
+          <NavItem
+            icon={<Settings size={18} />}
+            label="System Config"
+            active={activeTab === 'config'}
+            collapsed={sidebarCollapsed}
+            onClick={() => setActiveTab('config')}
+          />
         </nav>
 
-        <div className="mt-auto pt-8 border-t border-white/5 text-left">
-          <motion.button whileHover={{ x: 5, color: "#ef4444" }} onClick={handleLogout} className="flex items-center gap-4 px-4 py-3 w-full text-gray-500 transition-all text-[10px] font-bold uppercase tracking-widest group text-left">
-            <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" /> Terminate Session
+        <div className="p-3 border-t border-white/6">
+          <motion.button
+            whileHover={{ x: 4 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleLogout}
+            className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-red-300 bg-red-500/8 border border-red-500/15 hover:bg-red-500/12 transition-all ${
+              sidebarCollapsed ? 'justify-center' : ''
+            }`}
+          >
+            <LogOut size={16} />
+            {!sidebarCollapsed && <span className="text-sm font-semibold">Terminate Session</span>}
           </motion.button>
         </div>
       </motion.aside>
 
-      <main className="flex-1 p-12 overflow-y-auto relative text-left">
-        <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.03, 0.07, 0.03] }} transition={{ duration: 10, repeat: Infinity }} className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#D4AF37] blur-[150px] rounded-full -z-10" />
+      {/* MAIN */}
+      <main className="flex-1 min-w-0 overflow-y-auto relative">
+        <motion.div
+          animate={{ scale: [1, 1.15, 1], opacity: [0.03, 0.07, 0.03] }}
+          transition={{ duration: 9, repeat: Infinity }}
+          className="absolute top-0 right-0 w-[760px] h-[760px] bg-[#D4AF37] blur-[170px] rounded-full -z-10"
+        />
 
-        {/* ✅ REMOVED ONE TOPIC: Dashboard Header is now HIDDEN ONLY when 'suppliers' is active */}
-        {activeTab !== 'suppliers' && (
-          <header className="flex justify-between items-start mb-16 text-left">
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="text-left">
-              <div className="flex items-center gap-3 mb-3 text-left">
-                <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="text-left">
-                  <ShieldCheck size={14} className="text-[#D4AF37]" />
-                </motion.div>
-                <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.6em] text-left">
-                  {activeTab === 'clients' ? 'Protocol: Personnel Management' : 
-                   activeTab === 'financials' ? 'Protocol: Fiscal Intelligence' : 
-                   activeTab === 'config' ? 'Protocol: Core Reconfiguration' : 
-                   'Protocol Status: Senior Admin'}
-                </p>
-              </div>
-              <h1 className="text-6xl font-black uppercase tracking-tighter leading-none text-left">
-                {activeTab === 'clients' ? 'Personnel' : 
-                 activeTab === 'financials' ? 'Fiscal' : 
-                 activeTab === 'config' ? 'System' : 
-                 activeTab === 'broadcast' ? 'Broadcast' : 
-                 activeTab === 'promotions' ? 'Promotion' : 
-                 activeTab === 'inventory' ? 'Inventory' : 'Welcome,'} 
-                <span className="text-transparent stroke-text ml-4 text-left">
-                  {activeTab === 'clients' ? 'Registry' : 
-                   activeTab === 'financials' ? 'Analysis' : 
-                   activeTab === 'config' ? 'Config' : 
-                   activeTab === 'broadcast' ? 'Hub' : 
-                   activeTab === 'promotions' ? 'Registry' : 
-                   activeTab === 'inventory' ? 'Stock' : user.name}
-                </span>
-              </h1>
-            </motion.div>
-            
-            <div className="flex items-center gap-8 text-left">
-              <div className="relative group text-left">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#D4AF37]" size={16} />
-                <input type="text" placeholder="SEARCH REGISTRY..." className="bg-white/5 border border-white/10 py-3 pl-10 pr-6 text-[10px] tracking-widest outline-none focus:border-[#D4AF37] transition-all w-64 uppercase font-bold text-left shadow-lg" />
-              </div>
-              <motion.div whileHover={{ rotate: 15 }} className="w-12 h-12 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-full flex items-center justify-center relative cursor-pointer hover:bg-[#D4AF37]/20 transition-all shadow-xl text-left">
-                <Bell size={20} className="text-[#D4AF37]" />
-                <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-[#050505] rounded-full text-left" />
-              </motion.div>
-            </div>
-          </header>
-        )}
-
-        <AnimatePresence mode="wait">
-          {activeTab === 'command' && (
-            <motion.div key="command" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="space-y-12 text-left">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                <StatCard icon={<Package/>} label="Active Inventory" val="14,208" sub="Units in stock" trend="+12.5%" />
-                <StatCard icon={<TrendingUp/>} label="Daily Revenue" val="LKR 425K" sub="Verified Transactions" trend="+8.2%" />
-                <StatCard icon={<Users/>} label="Total Clients" val="2,148" sub="Database Entries" trend="+4%" />
-              </div>
-              <motion.div variants={panelVariants} className="text-left"><DiscountSuggestionPanel onApplyClick={handleApplyDiscountFromAI} /></motion.div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
-                <div className="lg:col-span-2 text-left"><AuditPreviewWidget /></div>
-                <motion.div variants={panelVariants} className="flex flex-col gap-8 text-left">
-                  <LowStockWidget />
-                  <div className="p-10 border border-white/5 bg-[#D4AF37]/5 backdrop-blur-md flex flex-col justify-between text-left shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 text-left"><Activity size={80} /></div>
-                    <h3 className="text-xs font-black tracking-[0.4em] uppercase text-[#D4AF37] mb-8 text-left">Quick Operations</h3>
-                    <div className="space-y-4 text-left">
-                      <ActionButton label="Add New Product" onClick={() => setIsModalOpen(true)} />
-                      <ActionButton label="Fiscal Analytics" onClick={() => setActiveTab('financials')} />
-                      <ActionButton label="Stock Audit View" onClick={() => navigate('/admin/audit-logs')} />
-                    </div>
+        <div className="px-6 lg:px-10 py-8 lg:py-10">
+          {activeTab !== 'suppliers' && (
+            <header className="mb-10 lg:mb-12">
+              <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
+                <motion.div
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.55 }}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+                    <p className="text-sm font-semibold text-[#D4AF37] uppercase tracking-[0.22em]">
+                      {header.eyebrow}
+                    </p>
                   </div>
+
+                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight leading-none">
+                    {header.title}
+                  </h1>
+
+                  <p className="mt-4 text-base text-gray-400 max-w-2xl leading-relaxed">
+                    {header.sub}
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.55 }}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
+                >
+                  <div className="relative group">
+                    <Search
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#D4AF37]"
+                      size={18}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search registry..."
+                      className="w-full sm:w-72 rounded-2xl border border-white/10 bg-white/5 py-3.5 pl-11 pr-4 text-sm outline-none focus:border-[#D4AF37] transition-all placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ rotate: 10 }}
+                    className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center relative hover:bg-[#D4AF37]/15 transition-all"
+                  >
+                    <Bell size={20} className="text-[#D4AF37]" />
+                    <div className="absolute top-0.5 right-0.5 w-3 h-3 bg-red-500 border-2 border-[#050505] rounded-full" />
+                  </motion.button>
                 </motion.div>
               </div>
-            </motion.div>
+            </header>
           )}
 
-          {activeTab === 'broadcast' && (
-            <motion.div key="broadcast" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="space-y-12 text-left">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 text-left">
-                <section className="space-y-6 text-left"><div className="flex items-center gap-3 text-left"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse text-left" /><h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 text-left">Internal Staff Protocol</h2></div><StaffNoticeManager onSuccess={() => setArchiveRefresh(prev => prev + 1)} /></section>
-                <section className="space-y-6 text-left"><div className="flex items-center gap-3 text-left"><div className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse text-left" /><h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#D4AF37] text-left">Customer Promotion Engine</h2></div><PromotionNoticeManager onSuccess={() => setArchiveRefresh(prev => prev + 1)} /></section>
-              </div>
-              <motion.div variants={panelVariants} className="text-left"><NoticeArchive refreshTrigger={archiveRefresh} /></motion.div>
-            </motion.div>
-          )}
+          <AnimatePresence mode="wait">
+            {activeTab === 'command' && (
+              <motion.div
+                key="command"
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="space-y-8"
+              >
+                <motion.div
+                  variants={staggerWrap}
+                  initial="hidden"
+                  animate="show"
+                  className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                >
+                  <StatCard
+                    icon={<Boxes />}
+                    label="Active Inventory"
+                    value="14,208"
+                    sub="Units currently in stock"
+                    trend="+12.5%"
+                  />
+                  <StatCard
+                    icon={<Wallet />}
+                    label="Daily Revenue"
+                    value="LKR 425K"
+                    sub="Verified transactions today"
+                    trend="+8.2%"
+                  />
+                  <StatCard
+                    icon={<Users />}
+                    label="Total Clients"
+                    value="2,148"
+                    sub="Registered database entries"
+                    trend="+4.0%"
+                  />
+                </motion.div>
 
-          {activeTab === 'promotions' && (
-            <motion.div key="promotions" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="space-y-12 text-left">
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-12 text-left">
-                <div className="xl:col-span-7 text-left">
-                   <PromotionManager preSelected={preSelectedProduct} editingItem={editingPromo} onCancelEdit={() => setEditingPromo(null)} onSuccess={() => { setPromoRefreshTrigger(prev => prev + 1); setPreSelectedProduct(null); setEditingPromo(null); }} />
+                <motion.div variants={fadeUp} initial="hidden" animate="show">
+                  <DiscountSuggestionPanel onApplyClick={handleApplyDiscountFromAI} />
+                </motion.div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  <div className="xl:col-span-2">
+                    <AuditPreviewWidget />
+                  </div>
+
+                  <motion.div
+                    variants={staggerWrap}
+                    initial="hidden"
+                    animate="show"
+                    className="space-y-6"
+                  >
+                    <motion.div variants={fadeUp}>
+                      <LowStockWidget />
+                    </motion.div>
+
+                    <motion.div
+                      variants={fadeUp}
+                      className="rounded-3xl border border-white/10 bg-[#D4AF37]/6 backdrop-blur-xl p-7 shadow-[0_20px_60px_rgba(0,0,0,0.28)] relative overflow-hidden"
+                    >
+                      <div className="absolute top-5 right-5 opacity-10">
+                        <Activity size={72} />
+                      </div>
+
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37] mb-3">
+                        Quick Operations
+                      </p>
+                      <h3 className="text-2xl font-bold mb-6">Admin Shortcuts</h3>
+
+                      <div className="space-y-4">
+                        <ActionButton label="Add New Product" onClick={() => setIsModalOpen(true)} />
+                        <ActionButton label="Fiscal Analytics" onClick={() => setActiveTab('financials')} />
+                        <ActionButton
+                          label="Stock Audit View"
+                          onClick={() => navigate('/admin/audit-logs')}
+                        />
+                      </div>
+                    </motion.div>
+                  </motion.div>
                 </div>
-                <div className="xl:col-span-5 bg-white/[0.02] border border-white/5 p-10 backdrop-blur-xl text-left shadow-2xl">
-                   <h3 className="text-xs font-black uppercase tracking-[0.4em] text-[#D4AF37] mb-8 text-left">Active Protocols</h3>
-                   <ActivePromotionList refreshTrigger={promoRefreshTrigger} onEdit={(promo) => setEditingPromo(promo)} />
+              </motion.div>
+            )}
+
+            {activeTab === 'broadcast' && (
+              <motion.div
+                key="broadcast"
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="space-y-10"
+              >
+                {/* INTERNAL STAFF FIRST */}
+                <section className="space-y-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                    <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-400">
+                      Internal Staff Protocol
+                    </h2>
+                  </div>
+                  <StaffNoticeManager onSuccess={() => setArchiveRefresh((prev) => prev + 1)} />
+                </section>
+
+                {/* CUSTOMER PROMOTION BELOW STAFF */}
+                <section className="space-y-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse" />
+                    <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+                      Customer Promotion Engine
+                    </h2>
+                  </div>
+
+                  <PromotionNoticeManager
+                    editingNotice={editingNotice}
+                    onCancelEdit={() => setEditingNotice(null)}
+                    onSuccess={() => {
+                      setEditingNotice(null);
+                      setArchiveRefresh((prev) => prev + 1);
+                    }}
+                  />
+                </section>
+
+                {/* ARCHIVE LAST */}
+                <motion.div variants={fadeUp} initial="hidden" animate="show">
+                  <NoticeArchive
+                    refreshTrigger={archiveRefresh}
+                    onEdit={(notice) => {
+                      setEditingNotice(notice);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  />
+                </motion.div>
+              </motion.div>
+            )}
+
+            {activeTab === 'promotions' && (
+              <motion.div
+                key="promotions"
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="space-y-8"
+              >
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                  <div className="xl:col-span-7">
+                    <PromotionManager
+                      preSelected={preSelectedProduct}
+                      editingItem={editingPromo}
+                      onCancelEdit={() => setEditingPromo(null)}
+                      onSuccess={() => {
+                        setPromoRefreshTrigger((prev) => prev + 1);
+                        setPreSelectedProduct(null);
+                        setEditingPromo(null);
+                      }}
+                    />
+                  </div>
+
+                  <div className="xl:col-span-5 rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-7 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37] mb-3">
+                      Active Protocols
+                    </p>
+                    <h3 className="text-2xl font-bold mb-6">Running Promotions</h3>
+                    <ActivePromotionList
+                      refreshTrigger={promoRefreshTrigger}
+                      onEdit={(promo) => setEditingPromo(promo)}
+                    />
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
 
-          {activeTab === 'config' && ( <motion.div key="config" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="text-left"><SystemConfig /></motion.div> )}
-          {activeTab === 'financials' && ( <motion.div key="financials" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="text-left"><Financials /></motion.div> )}
+            {activeTab === 'config' && (
+              <motion.div
+                key="config"
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <SystemConfig />
+              </motion.div>
+            )}
 
-          {/* ✅ SUPPLIER REGISTRY: Dashboard header is now removed when viewing this */}
-          {activeTab === 'suppliers' && (
-            <motion.div key="suppliers" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="text-left">
-              <SupplierRegistry />
-            </motion.div>
-          )}
+            {activeTab === 'financials' && (
+              <motion.div
+                key="financials"
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <Financials />
+              </motion.div>
+            )}
 
-          {activeTab === 'inventory' && (<motion.div key="inventory" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="text-left"><InventoryList /></motion.div>)}
-          {activeTab === 'clients' && (<motion.div key="clients" initial="initial" animate="animate" exit="exit" variants={panelVariants} className="text-left"><PersonnelRegistry /></motion.div>)}
-        </AnimatePresence>
+            {activeTab === 'suppliers' && (
+              <motion.div
+                key="suppliers"
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <SupplierRegistry />
+              </motion.div>
+            )}
+
+            {activeTab === 'inventory' && (
+              <motion.div
+                key="inventory"
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <InventoryList />
+              </motion.div>
+            )}
+
+            {activeTab === 'clients' && (
+              <motion.div
+                key="clients"
+                variants={pageTransition}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <PersonnelRegistry />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </main>
 
-      {/* --- MODAL SYSTEM --- */}
+      {/* MODAL SYSTEM */}
       <AnimatePresence>
         {isModalOpen && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] cursor-pointer" />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed right-0 top-0 h-screen w-[500px] z-[70] shadow-2xl">
-                <AddProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] cursor-pointer"
+            />
+
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 24, stiffness: 190 }}
+              className="fixed right-0 top-0 h-screen w-full sm:w-[520px] z-[70] shadow-2xl"
+            >
+              <AddProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
             </motion.div>
           </>
         )}
       </AnimatePresence>
-      <style>{`.stroke-text { -webkit-text-stroke: 1px rgba(212, 175, 55, 0.5); color: transparent; }`}</style>
     </div>
   );
 };
 
-const NavItem = ({ icon, label, active = false, onClick }) => (
-  <motion.button whileHover={{ x: 8 }} whileTap={{ scale: 0.95 }} onClick={onClick} className={`w-full flex items-center justify-between px-6 py-4 transition-all duration-300 relative overflow-hidden group ${active ? 'bg-[#D4AF37] text-black shadow-[0_10px_30px_rgba(212,175,55,0.2)] font-black' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
-    <div className="flex items-center gap-5 relative z-10 text-[11px] uppercase tracking-widest text-left"><motion.span animate={active ? { rotate: [0, 10, -10, 0] } : {}} transition={{ repeat: Infinity, duration: 2 }}>{icon}</motion.span>{label}</div>
-    {active && <motion.div initial={{ x: -10 }} animate={{ x: 0 }}><ChevronRight size={14} className="relative z-10" /></motion.div>}
-    {!active && (<motion.div className="absolute left-0 top-0 h-full w-0 bg-gradient-to-r from-[#D4AF37]/20 to-transparent group-hover:w-full transition-all" initial={false} transition={{ duration: 0.4 }} />)}
+const NavItem = ({ icon, label, active = false, onClick, collapsed = false }) => (
+  <motion.button
+    whileHover={{ x: collapsed ? 0 : 4 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={onClick}
+    className={`w-full flex items-center ${
+      collapsed ? 'justify-center' : 'justify-between'
+    } rounded-2xl px-4 py-3.5 transition-all duration-300 group relative ${
+      active
+        ? 'bg-[#D4AF37] text-black shadow-[0_10px_24px_rgba(212,175,55,0.18)]'
+        : 'text-gray-400 hover:text-white hover:bg-white/6'
+    }`}
+    title={collapsed ? label : undefined}
+  >
+    <div className={`flex items-center ${collapsed ? '' : 'gap-3'} min-w-0`}>
+      <span className="shrink-0">{icon}</span>
+      {!collapsed && (
+        <span className="text-sm font-medium truncate">
+          {label}
+        </span>
+      )}
+    </div>
+
+    {!collapsed && active && <ChevronRight size={16} />}
   </motion.button>
 );
 
-const StatCard = ({ icon, label, val, sub, trend }) => (
-  <motion.div whileHover={{ y: -10, scale: 1.02, borderColor: 'rgba(212, 175, 55, 0.4)' }} className="p-10 border border-white/5 bg-white/[0.01] backdrop-blur-sm transition-all group relative text-left shadow-xl"><div className="absolute top-8 right-8 text-[#D4AF37]/10 group-hover:text-[#D4AF37]/30 transition-all duration-500 group-hover:rotate-12 group-hover:scale-110">{React.cloneElement(icon, { size: 60 })}</div><p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-bold mb-3">{label}</p><h3 className="text-5xl font-black tracking-tighter mb-2 group-hover:text-[#D4AF37] transition-colors">{val}</h3><p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mb-6">{sub}</p><motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-2 text-[10px] font-black text-[#D4AF37] bg-[#D4AF37]/5 w-fit px-3 py-1 border border-[#D4AF37]/10 shadow-lg"><ArrowUpRight size={12} /> {trend} </motion.div></motion.div>
+const StatCard = ({ icon, label, value, sub, trend }) => (
+  <motion.div
+    variants={fadeUp}
+    whileHover={{ y: -6, borderColor: 'rgba(212,175,55,0.35)' }}
+    className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-7 shadow-[0_18px_50px_rgba(0,0,0,0.24)] relative overflow-hidden"
+  >
+    <div className="absolute top-5 right-5 text-[#D4AF37]/12">
+      {React.cloneElement(icon, { size: 54 })}
+    </div>
+
+    <p className="text-sm font-semibold text-gray-400">{label}</p>
+    <h3 className="text-4xl lg:text-5xl font-black tracking-tight mt-4 text-white">
+      {value}
+    </h3>
+    <p className="text-sm text-gray-500 mt-3">{sub}</p>
+
+    <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/15 bg-[#D4AF37]/8 px-3.5 py-2 text-sm font-semibold text-[#D4AF37]">
+      <ArrowUpRight size={14} />
+      {trend}
+    </div>
+  </motion.div>
 );
 
 const ActionButton = ({ label, onClick }) => (
-  <motion.button whileHover={{ scale: 1.02, x: 5 }} whileTap={{ scale: 0.98 }} onClick={onClick} className="w-full py-5 px-6 border border-white/10 hover:border-[#D4AF37] hover:bg-white/5 transition-all text-left text-[10px] font-black uppercase tracking-[0.3em] flex justify-between items-center group shadow-md"><span className="group-hover:text-[#D4AF37] transition-colors">{label}</span><motion.div animate={{ x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}><ArrowUpRight size={14} className="text-[#D4AF37]" /></motion.div></motion.button>
+  <motion.button
+    whileHover={{ x: 4, scale: 1.01 }}
+    whileTap={{ scale: 0.985 }}
+    onClick={onClick}
+    className="w-full rounded-2xl border border-white/10 bg-white/4 hover:border-[#D4AF37]/35 hover:bg-white/6 transition-all px-5 py-4 text-left flex items-center justify-between"
+  >
+    <span className="text-sm font-semibold text-white">{label}</span>
+    <ArrowUpRight size={16} className="text-[#D4AF37]" />
+  </motion.button>
 );
 
 export default AdminDashboard;
