@@ -21,7 +21,7 @@ public class NoticeController {
         this.noticeRepository = noticeRepository;
     }
 
-    // --- ADMIN: FETCH ALL FOR ARCHIVE ---
+    // 🔹 GET ALL (ADMIN)
     @GetMapping("/all")
     public List<Notice> getAllNotices() {
         return noticeRepository.findAll().stream()
@@ -29,12 +29,11 @@ public class NoticeController {
                 .collect(Collectors.toList());
     }
 
-    // --- STAFF ENDPOINTS ---
+    // 🔹 STAFF NOTICE
     @PostMapping("/staff")
     public Notice postStaffNotice(@RequestBody Notice notice) {
         notice.setTargetRole("STAFF");
         notice.setCreatedAt(LocalDateTime.now());
-        notice.setActive(true);
         return noticeRepository.save(notice);
     }
 
@@ -42,11 +41,10 @@ public class NoticeController {
     public List<Notice> getStaffNotices() {
         return noticeRepository.findAll().stream()
                 .filter(n -> "STAFF".equals(n.getTargetRole()))
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
-    // --- CUSTOMER PROMOTION ENDPOINTS ---
+    // 🔥 CUSTOMER PROMOTION
     @PostMapping("/publish")
     public Notice publishPromotion(@RequestBody Notice notice) {
         notice.setTargetRole("CUSTOMER");
@@ -63,23 +61,26 @@ public class NoticeController {
                 .collect(Collectors.toList());
     }
 
-    // --- ADMIN AUTHORITY: DELETE ---
+    // 🔹 DELETE
     @DeleteMapping("/{id}")
     public void deleteNotice(@PathVariable Long id) {
         noticeRepository.deleteById(id);
     }
 
-    // --- ADMIN AUTHORITY: UPDATE ---
+    // 🔹 UPDATE
     @PutMapping("/{id}")
     public Notice updateNotice(@PathVariable Long id, @RequestBody Notice updatedNotice) {
-        return noticeRepository.findById(id).map(notice -> {
-            notice.setTitle(updatedNotice.getTitle());
-            notice.setMessage(updatedNotice.getMessage());
-            notice.setStartDate(updatedNotice.getStartDate());
-            notice.setExpiryDate(updatedNotice.getExpiryDate());
-            notice.setUrgent(updatedNotice.isUrgent());
-            notice.setActive(updatedNotice.isActive());
-            return noticeRepository.save(notice);
-        }).orElseThrow(() -> new RuntimeException("Notice Registry Not Found"));
+        Notice notice = noticeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Notice not found"));
+
+        notice.setTitle(updatedNotice.getTitle());
+        notice.setMessage(updatedNotice.getMessage());
+        notice.setStartDate(updatedNotice.getStartDate());
+        notice.setExpiryDate(updatedNotice.getExpiryDate());
+        notice.setUrgent(updatedNotice.isUrgent());
+        notice.setActive(updatedNotice.isActive());
+        notice.setImageUrl(updatedNotice.getImageUrl());
+
+        return noticeRepository.save(notice);
     }
 }

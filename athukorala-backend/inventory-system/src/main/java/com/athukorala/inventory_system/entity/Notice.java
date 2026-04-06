@@ -2,8 +2,9 @@ package com.athukorala.inventory_system.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -18,12 +19,16 @@ public class Notice {
     @Column(length = 1000)
     private String message;
 
-    private String targetRole; // "STAFF" or "CUSTOMER"
+    private String targetRole;
 
     private LocalDateTime createdAt;
 
-    private LocalDate startDate;  // THE DAY THE PROMO ACTIVATES
-    private LocalDate expiryDate; // THE DAY THE PROMO EXPIRES
+    private LocalDate startDate;
+    private LocalDate expiryDate;
+
     private boolean urgent;
     private boolean active;
+
+    @Column(length = 1000)
+    private String imageUrl; // 🔥 important
 }
