@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -23,18 +23,39 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Boxes,
-  ArrowUpRight
+  ArrowUpRight,
+  SlidersHorizontal,
+  ListFilter
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import CustomerAnnouncement from '../components/CustomerAnnouncement';
 
+const CATEGORY_OPTIONS = [
+  'ALL',
+  'ELECTRICAL',
+  'PLUMBING',
+  'PAINTING & ADHESIVES',
+  'POWER TOOLS',
+  'HAND TOOLS',
+  'BUILDING MATERIALS',
+  'FASTENERS & SCREWS',
+  'SAFETY GEAR'
+];
+
+const SORT_OPTIONS = [
+  { value: 'LATEST', label: 'Latest Added' },
+  { value: 'PRICE_LOW_HIGH', label: 'Price: Low to High' },
+  { value: 'PRICE_HIGH_LOW', label: 'Price: High to Low' },
+  { value: 'NAME_A_Z', label: 'Name: A to Z' }
+];
+
 const CustomerDashboard = () => {
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [category, setCategory] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [curatedIds, setCuratedIds] = useState([]);
   const [filterMode, setFilterMode] = useState('all');
+  const [sortType, setSortType] = useState('LATEST');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -56,7 +77,6 @@ const CustomerDashboard = () => {
       .then((data) => {
         const safeData = Array.isArray(data) ? data : [];
         setProducts(safeData);
-        setFilteredProducts(safeData);
       })
       .catch(() => toast.error('Hardware Registry Offline'));
   };
@@ -87,25 +107,53 @@ const CustomerDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    let result = Array.isArray(products) ? products : [];
+  const filteredProducts = useMemo(() => {
+    let result = Array.isArray(products) ? [...products] : [];
 
     if (category !== 'ALL') {
-      result = result.filter((p) => p.category?.toUpperCase() === category);
+      result = result.filter(
+        (p) => (p.category || '').toUpperCase() === category.toUpperCase()
+      );
     }
 
-    if (searchTerm) {
-      result = result.filter((p) =>
-        p.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter((p) => {
+        const name = p.name?.toLowerCase() || '';
+        const cat = p.category?.toLowerCase() || '';
+        const description = p.description?.toLowerCase() || '';
+        return (
+          name.includes(term) ||
+          cat.includes(term) ||
+          description.includes(term)
+        );
+      });
     }
 
     if (filterMode === 'offers') {
       result = result.filter((p) => p.discountedPrice && p.discountedPrice < p.price);
     }
 
-    setFilteredProducts(result);
-  }, [category, searchTerm, products, filterMode]);
+    if (sortType === 'PRICE_LOW_HIGH') {
+      result.sort((a, b) => {
+        const priceA = a.discountedPrice && a.discountedPrice < a.price ? a.discountedPrice : a.price || 0;
+        const priceB = b.discountedPrice && b.discountedPrice < b.price ? b.discountedPrice : b.price || 0;
+        return priceA - priceB;
+      });
+    } else if (sortType === 'PRICE_HIGH_LOW') {
+      result.sort((a, b) => {
+        const priceA = a.discountedPrice && a.discountedPrice < a.price ? a.discountedPrice : a.price || 0;
+        const priceB = b.discountedPrice && b.discountedPrice < b.price ? b.discountedPrice : b.price || 0;
+        return priceB - priceA;
+      });
+    } else if (sortType === 'NAME_A_Z') {
+      result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else {
+      result.sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+    }
+
+    return result;
+  }, [products, category, searchTerm, filterMode, sortType]);
 
   const handleAddToCart = async (product) => {
     if (user.name.includes('Guest')) {
@@ -265,14 +313,30 @@ const CustomerDashboard = () => {
         <div className="px-4 pb-4 space-y-4">
           <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
             {!sidebarCollapsed ? (
-              <>
-                <p className="text-xs text-gray-500 uppercase tracking-[0.14em]">
-                  Authenticated Identity
-                </p>
-                <p className="text-lg font-medium text-[#D4AF37] mt-3 truncate">
-                  {user.name}
-                </p>
-              </>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full overflow-hidden border border-[#D4AF37]/30 bg-black flex items-center justify-center shrink-0">
+                  {user?.profilePic ? (
+                    <img
+                      src={user.profilePic}
+                      alt={user?.name || 'Profile'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-semibold text-[#D4AF37]">
+                      {getInitials(user?.name)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500 uppercase tracking-[0.14em]">
+                    Authenticated Identity
+                  </p>
+                  <p className="text-lg font-medium text-[#D4AF37] mt-1 truncate">
+                    {user?.name || 'Authorized Guest'}
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="flex justify-center">
                 <BadgeCheck className="text-[#D4AF37]" size={18} />
@@ -311,6 +375,22 @@ const CustomerDashboard = () => {
         <div className="absolute top-0 left-0 w-[520px] h-[520px] bg-white/[0.02] blur-[150px] rounded-full -z-10 pointer-events-none" />
 
         <div className="px-5 sm:px-8 lg:px-10 2xl:px-14 py-8 lg:py-10">
+          {/* TOP BAR */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8"
+          >
+            <div>
+              <p className="text-sm text-gray-400">Customer Portal</p>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-white">
+                Dashboard
+              </h2>
+            </div>
+
+            <TopUserChip user={user} />
+          </motion.div>
+
           {/* HERO ANNOUNCEMENT WRAP */}
           <motion.section
             initial={{ opacity: 0, y: 18 }}
@@ -401,6 +481,7 @@ const CustomerDashboard = () => {
                   <input
                     type="text"
                     placeholder="Search registry..."
+                    value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full sm:w-[420px] rounded-2xl border border-white/10 bg-white/5 py-4 pl-11 pr-5 text-sm outline-none focus:border-[#D4AF37] transition-all placeholder:text-gray-500"
                   />
@@ -425,60 +506,133 @@ const CustomerDashboard = () => {
                 </button>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                {['ALL', 'ELECTRICAL', 'PLUMBING', 'TOOLS', 'PAINTS'].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => {
-                      setCategory(cat);
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="relative">
+                  <ListFilter
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37] pointer-events-none"
+                  />
+                  <select
+                    value={category}
+                    onChange={(e) => {
+                      setCategory(e.target.value);
                       setFilterMode('all');
                     }}
-                    className={`px-5 py-3 rounded-2xl text-sm font-medium border transition-all ${
-                      category === cat && filterMode === 'all'
-                        ? 'bg-[#D4AF37] border-[#D4AF37] text-black'
-                        : 'border-white/10 text-gray-300 hover:border-[#D4AF37]/30 hover:text-white bg-white/[0.03]'
-                    }`}
+                    className="w-full h-14 rounded-2xl border border-white/10 bg-[#050505] pl-11 pr-4 text-sm text-white outline-none focus:border-[#D4AF37]/40 transition-all appearance-none"
                   >
-                    {cat}
-                  </button>
-                ))}
+                    {CATEGORY_OPTIONS.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat === 'ALL' ? 'SELECT CATEGORY...' : cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                {filterMode === 'offers' && (
-                  <button
-                    onClick={() => setFilterMode('all')}
-                    className="px-5 py-3 rounded-2xl text-sm font-medium border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-all"
+                <div className="relative">
+                  <SlidersHorizontal
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37] pointer-events-none"
+                  />
+                  <select
+                    value={sortType}
+                    onChange={(e) => setSortType(e.target.value)}
+                    className="w-full h-14 rounded-2xl border border-white/10 bg-[#050505] pl-11 pr-4 text-sm text-white outline-none focus:border-[#D4AF37]/40 transition-all appearance-none"
                   >
-                    Clear Filters
-                  </button>
-                )}
+                    {SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setFilterMode((prev) => (prev === 'offers' ? 'all' : 'offers'));
+                  }}
+                  className={`h-14 rounded-2xl text-sm font-medium border transition-all ${
+                    filterMode === 'offers'
+                      ? 'bg-[#D4AF37] border-[#D4AF37] text-black'
+                      : 'border-white/10 text-gray-300 hover:border-[#D4AF37]/30 hover:text-white bg-white/[0.03]'
+                  }`}
+                >
+                  {filterMode === 'offers' ? 'Clear Offer Filter' : 'Show Offers Only'}
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <QuickFilterChip
+                  active={category === 'ALL' && filterMode === 'all'}
+                  onClick={() => {
+                    setCategory('ALL');
+                    setFilterMode('all');
+                  }}
+                  label="All Products"
+                />
+
+                <QuickFilterChip
+                  active={filterMode === 'offers'}
+                  onClick={() => setFilterMode('offers')}
+                  label="Promotions"
+                />
+
+                <QuickFilterChip
+                  active={category === 'POWER TOOLS' && filterMode === 'all'}
+                  onClick={() => {
+                    setCategory('POWER TOOLS');
+                    setFilterMode('all');
+                  }}
+                  label="Power Tools"
+                />
+
+                <QuickFilterChip
+                  active={category === 'SAFETY GEAR' && filterMode === 'all'}
+                  onClick={() => {
+                    setCategory('SAFETY GEAR');
+                    setFilterMode('all');
+                  }}
+                  label="Safety Gear"
+                />
               </div>
             </motion.div>
           </header>
 
           {/* PRODUCT GRID */}
-          <motion.section
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: {
-                transition: {
-                  staggerChildren: 0.06
+          {filteredProducts.length === 0 ? (
+            <div className="rounded-[32px] border border-dashed border-white/10 bg-white/[0.02] py-20 px-6 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-5">
+                <Package className="text-[#D4AF37]" size={28} />
+              </div>
+              <h3 className="text-2xl font-semibold mb-3">No products found</h3>
+              <p className="text-gray-400 max-w-xl mx-auto">
+                No products match your current category, search, or sorting filters.
+              </p>
+            </div>
+          ) : (
+            <motion.section
+              initial="hidden"
+              animate="show"
+              variants={{
+                hidden: {},
+                show: {
+                  transition: {
+                    staggerChildren: 0.06
+                  }
                 }
-              }
-            }}
-            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-7"
-          >
-            {filteredProducts.map((product) => (
-              <LuxuryProductCard
-                key={product.id}
-                product={product}
-                navigate={navigate}
-                onAddToCart={() => handleAddToCart(product)}
-                isInitiallyCurated={curatedIds.includes(product.id)}
-              />
-            ))}
-          </motion.section>
+              }}
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-7"
+            >
+              {filteredProducts.map((product) => (
+                <LuxuryProductCard
+                  key={product.id}
+                  product={product}
+                  navigate={navigate}
+                  onAddToCart={() => handleAddToCart(product)}
+                  isInitiallyCurated={curatedIds.includes(product.id)}
+                />
+              ))}
+            </motion.section>
+          )}
         </div>
       </main>
 
@@ -630,6 +784,55 @@ const CustomerDashboard = () => {
     </div>
   );
 };
+
+const getInitials = (name) => {
+  const parts = (name || 'User').trim().split(' ');
+  const first = parts[0]?.charAt(0) || '';
+  const second = parts[1]?.charAt(0) || '';
+  return `${first}${second}`.toUpperCase() || 'U';
+};
+
+const TopUserChip = ({ user }) => {
+  return (
+    <div className="flex items-center gap-4 self-start lg:self-auto rounded-[24px] border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur-xl">
+      <div className="w-12 h-12 rounded-full overflow-hidden border border-[#D4AF37]/30 bg-black flex items-center justify-center shrink-0">
+        {user?.profilePic ? (
+          <img
+            src={user.profilePic}
+            alt={user?.name || 'Profile'}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-sm font-semibold text-[#D4AF37]">
+            {getInitials(user?.name)}
+          </span>
+        )}
+      </div>
+
+      <div>
+        <p className="text-xs uppercase tracking-[0.16em] text-gray-500">
+          Logged in as
+        </p>
+        <p className="text-sm font-medium text-white">
+          {user?.name || 'Authorized Guest'}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const QuickFilterChip = ({ active, onClick, label }) => (
+  <button
+    onClick={onClick}
+    className={`px-4 py-2.5 rounded-2xl text-sm font-medium border transition-all ${
+      active
+        ? 'bg-[#D4AF37] border-[#D4AF37] text-black'
+        : 'border-white/10 text-gray-300 hover:border-[#D4AF37]/30 hover:text-white bg-white/[0.03]'
+    }`}
+  >
+    {label}
+  </button>
+);
 
 const SideNavItem = ({ icon, label, active = false, onClick, collapsed = false }) => (
   <motion.button
