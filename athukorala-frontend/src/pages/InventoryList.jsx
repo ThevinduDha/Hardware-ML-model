@@ -1,213 +1,471 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Edit, Trash2, Box, TrendingDown } from 'lucide-react';
+import {
+  Search,
+  Edit,
+  Trash2,
+  Box,
+  TrendingDown,
+  Layers3,
+  ShieldCheck,
+  Package2,
+  AlertTriangle
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import UpdateProductModal from './UpdateProductModal'; 
+import UpdateProductModal from './UpdateProductModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.45,
+      ease: 'easeOut',
+      staggerChildren: 0.06
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: 'easeOut' }
+  }
+};
 
 const InventoryList = () => {
   const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  // MODAL STATES
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // 1. Fetch all products on load
   const fetchProducts = () => {
-    fetch("http://localhost:8080/api/products/all")
-      .then(res => res.json())
-      .then(data => setProducts(data))
-      .catch(err => console.error("Error fetching stock"));
+    fetch('http://localhost:8080/api/products/all')
+      .then((res) => res.json())
+      .then((data) => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => {
+        toast.error('Unable to load inventory');
+        setProducts([]);
+      });
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  // 2. High-Security Delete Protocol (UPDATED FOR INTEGRITY HANDLING)
   const executeDelete = async () => {
     if (!selectedProduct) return;
 
-    const loadingToast = toast.loading("Executing Delete Protocol...");
-    
-    try {
-      const response = await fetch(`http://localhost:8080/api/products/${selectedProduct.id}`, {
-        method: "DELETE",
-      });
+    const loadingToast = toast.loading('Executing Delete Protocol...');
 
-      const result = await response.json(); // Parse the structured response from backend
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/products/${selectedProduct.id}`,
+        {
+          method: 'DELETE'
+        }
+      );
+
+      const result = await response.json();
 
       if (response.ok) {
-        toast.success(result.message || "Asset Successfully Purged", { id: loadingToast });
-        setProducts(products.filter(p => p.id !== selectedProduct.id));
+        toast.success(result.message || 'Asset Successfully Purged', {
+          id: loadingToast
+        });
+        setProducts((prev) => prev.filter((p) => p.id !== selectedProduct.id));
         setIsDeleteModalOpen(false);
+        setSelectedProduct(null);
       } else {
-        // If status is 403 (FORBIDDEN), it will show the Integrity Error message
-        toast.error(result.message || "Authorization Denied or System Error", { 
+        toast.error(result.message || 'Authorization Denied or System Error', {
           id: loadingToast,
-          duration: 4000 
+          duration: 4000
         });
         setIsDeleteModalOpen(false);
       }
     } catch (error) {
-      toast.error("Connection Failed: Ensure Backend is Online", { id: loadingToast });
+      toast.error('Connection Failed: Ensure Backend is Online', {
+        id: loadingToast
+      });
     }
   };
 
-  const filteredProducts = Array.isArray(products) ? products.filter(p => 
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  const filteredProducts = useMemo(() => {
+    if (!Array.isArray(products)) return [];
+
+    return products.filter((product) => {
+      const term = searchTerm.toLowerCase().trim();
+      if (!term) return true;
+
+      const name = product.name?.toLowerCase() || '';
+      const category = product.category?.toLowerCase() || '';
+      const description = product.description?.toLowerCase() || '';
+
+      return (
+        name.includes(term) ||
+        category.includes(term) ||
+        description.includes(term)
+      );
+    });
+  }, [products, searchTerm]);
+
+  const totalProducts = products.length;
+  const discountedProducts = products.filter(
+    (p) => p.discountedPrice && p.discountedPrice < p.price
+  ).length;
+  const lowStockProducts = products.filter(
+    (p) => Number(p.stockQuantity || 0) <= 5
+  ).length;
+  const totalUnits = products.reduce(
+    (sum, p) => sum + Number(p.stockQuantity || 0),
+    0
+  );
+
+  const getStockStatus = (qty) => {
+    if (qty <= 0) {
+      return {
+        label: 'OUT OF STOCK',
+        badge: 'bg-red-500/15 text-red-400 border-red-500/20',
+        bar: 'bg-red-500'
+      };
+    }
+
+    if (qty <= 5) {
+      return {
+        label: 'LOW STOCK',
+        badge: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
+        bar: 'bg-amber-400'
+      };
+    }
+
+    return {
+      label: 'IN STOCK',
+      badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+      bar: 'bg-emerald-500'
+    };
+  };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-8 text-left">
-      <div className="flex justify-between items-center mb-10">
-        <div>
-          <p className="text-[#D4AF37] text-[10px] font-bold tracking-[0.5em] uppercase mb-2">Registry</p>
-          <h2 className="text-4xl font-black uppercase tracking-tighter">Current Stock</h2>
-        </div>
-        
-        <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#D4AF37] transition-colors" size={16} />
-          <input 
-            type="text" 
-            placeholder="SEARCH INVENTORY..." 
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-white/5 border border-white/10 py-3 pl-10 pr-6 text-[10px] tracking-widest outline-none focus:border-[#D4AF37]/50 w-80 uppercase font-bold transition-all placeholder:text-gray-700"
-          />
-        </div>
-      </div>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-8"
+    >
+      {/* HEADER */}
+      <motion.div
+        variants={itemVariants}
+        className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6 lg:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.30)]"
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.16),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.05),transparent_28%)] pointer-events-none" />
 
-      <div className="border border-white/5 bg-white/[0.01] backdrop-blur-md overflow-hidden shadow-2xl">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-white/10 bg-white/[0.02] text-[10px] tracking-[0.3em] uppercase text-gray-500 font-black">
-              <th className="p-6">Asset Visual</th>
-              <th className="p-6">Product Identity</th>
-              <th className="p-6">Category</th>
-              <th className="p-6">Pricing Protocol</th>
-              <th className="p-6">Availability</th>
-              <th className="p-6 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            {filteredProducts.map((product) => {
-              const hasDiscount = product.discountedPrice && product.discountedPrice < product.price;
-              const discountPercent = hasDiscount 
-                ? Math.round(((product.price - product.discountedPrice) / product.price) * 100) 
-                : 0;
+        <div className="relative flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#D4AF37] mb-3">
+              Registry Control
+            </p>
+            <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-white">
+              Inventory List
+            </h2>
+            <p className="text-sm text-gray-400 mt-3 max-w-2xl">
+              View, search, update, and secure every registered product from one
+              premium control panel.
+            </p>
+          </div>
 
-              return (
-                <motion.tr 
-                  key={product.id} 
-                  whileHover={{ backgroundColor: "rgba(212, 175, 55, 0.02)" }}
-                  className="border-b border-white/5 transition-colors group"
-                >
-                  <td className="p-6">
-                    <div className="w-14 h-14 bg-black border border-white/10 overflow-hidden relative group-hover:border-[#D4AF37]/50 transition-colors shadow-inner">
-                      <img 
-                        src={product.imageUrl || "https://res.cloudinary.com/demo/image/upload/v1631530000/industrial-box.png"} 
-                        alt={product.name} 
-                        className="w-full h-full object-contain p-1" 
-                      />
-                    </div>
-                  </td>
-                  <td className="p-6">
-                    <div className="flex flex-col">
-                      <span className="font-black uppercase tracking-tight group-hover:text-[#D4AF37] transition-colors">{product.name}</span>
-                      <span className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mt-1">Ref: #{product.id.toString().padStart(4, '0')}</span>
-                    </div>
-                  </td>
-                  <td className="p-6">
-                    <span className="px-3 py-1 bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-gray-400">
-                      {product.category}
-                    </span>
-                  </td>
-                  <td className="p-6">
-                    {hasDiscount ? (
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                           <span className="text-gray-600 line-through text-[11px] font-mono">LKR {product.price.toLocaleString()}</span>
-                           <span className="bg-red-500/10 text-red-500 text-[8px] font-black px-1.5 py-0.5 uppercase tracking-tighter">-{discountPercent}%</span>
-                        </div>
-                        <span className="text-[#D4AF37] font-mono font-black text-base tracking-tighter">LKR {product.discountedPrice.toLocaleString()}</span>
-                      </div>
-                    ) : ( 
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">Standard Value</span>
-                        <span className="font-mono text-white text-base tracking-tighter">LKR {product.price?.toLocaleString()}</span> 
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-6">
-                    <div className="flex flex-col gap-2">
-                       <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest w-fit ${product.stockQuantity > 5 ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                         {product.stockQuantity} UNITS
-                       </span>
-                       <div className="w-20 h-1 bg-white/5 overflow-hidden rounded-full">
-                          <motion.div 
-                            initial={{ width: 0 }} 
-                            animate={{ width: `${Math.min((product.stockQuantity / 50) * 100, 100)}%` }} 
-                            className={`h-full ${product.stockQuantity > 5 ? 'bg-green-500' : 'bg-red-500'}`} 
+          <div className="relative w-full xl:w-[360px]">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Search inventory by name, category, or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 pl-12 pr-4 py-3.5 text-sm text-white placeholder:text-gray-500 outline-none transition-all focus:border-[#D4AF37]/60 focus:bg-black/40"
+            />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* STATS */}
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"
+      >
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-gray-400 font-semibold">
+                Total Products
+              </p>
+              <h3 className="text-3xl font-black text-white mt-2">
+                {totalProducts}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/[0.05] flex items-center justify-center">
+              <Layers3 className="text-[#D4AF37]" size={22} />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-[#D4AF37]/15 bg-[#D4AF37]/6 backdrop-blur-xl p-5 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-[#D4AF37] font-semibold">
+                Promo Active
+              </p>
+              <h3 className="text-3xl font-black text-white mt-2">
+                {discountedProducts}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 flex items-center justify-center">
+              <TrendingDown className="text-[#D4AF37]" size={22} />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-red-500/15 bg-red-500/6 backdrop-blur-xl p-5 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-red-300 font-semibold">
+                Low Stock
+              </p>
+              <h3 className="text-3xl font-black text-white mt-2">
+                {lowStockProducts}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl border border-red-500/20 bg-red-500/10 flex items-center justify-center">
+              <AlertTriangle className="text-red-400" size={22} />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-gray-400 font-semibold">
+                Total Units
+              </p>
+              <h3 className="text-3xl font-black text-white mt-2">
+                {totalUnits}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/[0.05] flex items-center justify-center">
+              <Package2 className="text-emerald-400" size={22} />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* TABLE */}
+      <motion.div
+        variants={itemVariants}
+        className="rounded-[28px] border border-white/10 bg-white/[0.04] backdrop-blur-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.28)]"
+      >
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-black/20">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl border border-white/10 bg-white/[0.04] flex items-center justify-center">
+              <ShieldCheck className="text-[#D4AF37]" size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">Live Inventory Registry</p>
+              <p className="text-xs text-gray-400">
+                {filteredProducts.length} visible item
+                {filteredProducts.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px] text-left">
+            <thead className="bg-white/[0.02]">
+              <tr className="text-[11px] uppercase tracking-[0.22em] text-gray-400">
+                <th className="px-6 py-4 font-semibold">Asset</th>
+                <th className="px-6 py-4 font-semibold">Product</th>
+                <th className="px-6 py-4 font-semibold">Category</th>
+                <th className="px-6 py-4 font-semibold">Price</th>
+                <th className="px-6 py-4 font-semibold">Stock</th>
+                <th className="px-6 py-4 font-semibold text-right">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product, index) => {
+                  const hasDiscount =
+                    product.discountedPrice &&
+                    Number(product.discountedPrice) < Number(product.price);
+
+                  const discountPercent = hasDiscount
+                    ? Math.round(
+                        ((product.price - product.discountedPrice) / product.price) * 100
+                      )
+                    : 0;
+
+                  const stockQty = Number(product.stockQuantity || 0);
+                  const stockStatus = getStockStatus(stockQty);
+
+                  return (
+                    <motion.tr
+                      key={product.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      className="border-t border-white/6 hover:bg-white/[0.03] transition-colors group"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="w-16 h-16 rounded-2xl border border-white/10 bg-black/35 overflow-hidden flex items-center justify-center shadow-inner group-hover:border-[#D4AF37]/30 transition-all">
+                          <img
+                            src={
+                              product.imageUrl ||
+                              'https://res.cloudinary.com/demo/image/upload/v1631530000/industrial-box.png'
+                            }
+                            alt={product.name}
+                            className="w-full h-full object-contain p-2"
                           />
-                       </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-white group-hover:text-[#D4AF37] transition-colors">
+                            {product.name}
+                          </span>
+                          <span className="text-[11px] text-gray-500 mt-1 uppercase tracking-[0.18em]">
+                            Ref #{String(product.id).padStart(4, '0')}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <span className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-300">
+                          {product.category || 'UNCATEGORIZED'}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        {hasDiscount ? (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 line-through">
+                                LKR {Number(product.price || 0).toLocaleString()}
+                              </span>
+                              <span className="rounded-full bg-red-500/15 border border-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">
+                                -{discountPercent}%
+                              </span>
+                            </div>
+                            <span className="text-base font-black text-[#D4AF37]">
+                              LKR {Number(product.discountedPrice || 0).toLocaleString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
+                              Standard Price
+                            </span>
+                            <span className="text-base font-bold text-white">
+                              LKR {Number(product.price || 0).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col gap-2 min-w-[180px]">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-bold text-white">
+                              {stockQty} units
+                            </span>
+                            <span
+                              className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] ${stockStatus.badge}`}
+                            >
+                              {stockStatus.label}
+                            </span>
+                          </div>
+
+                          <div className="w-full h-2 rounded-full bg-white/6 overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{
+                                width: `${Math.min((stockQty / 50) * 100, 100)}%`
+                              }}
+                              transition={{ duration: 0.6, ease: 'easeOut' }}
+                              className={`h-full ${stockStatus.bar}`}
+                            />
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-5">
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(product);
+                              setIsUpdateModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:border-[#D4AF37]/40 hover:text-[#D4AF37] hover:bg-[#D4AF37]/8"
+                            title="Update Entry"
+                          >
+                            <Edit size={16} />
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setSelectedProduct(product);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-2xl border border-red-500/15 bg-red-500/8 px-4 py-2.5 text-sm font-semibold text-red-300 transition-all hover:border-red-500/40 hover:bg-red-500/12 hover:text-red-200"
+                            title="Purge Asset"
+                          >
+                            <Trash2 size={16} />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="6" className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 rounded-2xl border border-white/10 bg-white/[0.04] flex items-center justify-center mb-4">
+                        <Box className="text-gray-500" size={26} />
+                      </div>
+                      <h3 className="text-lg font-bold text-white">
+                        No products found
+                      </h3>
+                      <p className="text-sm text-gray-400 mt-2 max-w-md">
+                        Try changing the search term or add products to the
+                        inventory registry.
+                      </p>
                     </div>
                   </td>
-                  <td className="p-6">
-                    <div className="flex gap-4 justify-end opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                      <button 
-                        onClick={() => {
-                          setSelectedProduct(product);
-                          setIsUpdateModalOpen(true);
-                        }}
-                        className="p-2 bg-white/5 border border-white/10 hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all"
-                        title="Update Entry"
-                      >
-                        <Edit size={14}/>
-                      </button>
-                      
-                      <button 
-                        onClick={() => {
-                          setSelectedProduct(product);
-                          setIsDeleteModalOpen(true);
-                        }}
-                        className="p-2 bg-white/5 border border-white/10 hover:border-red-500 hover:text-red-500 transition-all"
-                        title="Purge Asset"
-                      >
-                        <Trash2 size={14}/>
-                      </button>
-                    </div>
-                  </td>
-                </motion.tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mt-8 flex gap-8">
-        <div className="p-5 bg-white/[0.02] border border-white/5 flex items-center gap-4 min-w-[200px]">
-           <Box size={20} className="text-gray-500" />
-           <div>
-              <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Total Assets</p>
-              <p className="text-lg font-black">{products.length} Entries</p>
-           </div>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-        <div className="p-5 bg-[#D4AF37]/5 border border-[#D4AF37]/10 flex items-center gap-4 min-w-[200px]">
-           <TrendingDown size={20} className="text-[#D4AF37]" />
-           <div>
-              <p className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-widest">Promo Active</p>
-              <p className="text-lg font-black">{products.filter(p => p.discountedPrice < p.price).length} Items</p>
-           </div>
-        </div>
-      </div>
+      </motion.div>
 
+      {/* MODALS */}
       <AnimatePresence>
         {isUpdateModalOpen && (
-          <UpdateProductModal 
-            isOpen={isUpdateModalOpen} 
-            onClose={() => setIsUpdateModalOpen(false)} 
+          <UpdateProductModal
+            isOpen={isUpdateModalOpen}
+            onClose={() => {
+              setIsUpdateModalOpen(false);
+              setSelectedProduct(null);
+            }}
             product={selectedProduct}
             onUpdateSuccess={fetchProducts}
           />
@@ -216,15 +474,17 @@ const InventoryList = () => {
 
       <AnimatePresence>
         {isDeleteModalOpen && (
-          <DeleteConfirmModal 
-            isOpen={isDeleteModalOpen} 
-            onClose={() => setIsDeleteModalOpen(false)} 
-            onConfirm={executeDelete} 
-            itemName={selectedProduct?.name} 
+          <DeleteConfirmModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => {
+              setIsDeleteModalOpen(false);
+              setSelectedProduct(null);
+            }}
+            onConfirm={executeDelete}
+            itemName={selectedProduct?.name}
           />
         )}
       </AnimatePresence>
-      <style>{`.stroke-text { -webkit-text-stroke: 1px rgba(212, 175, 55, 0.5); color: transparent; }`}</style>
     </motion.div>
   );
 };
