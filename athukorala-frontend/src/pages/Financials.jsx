@@ -1,10 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { TrendingUp, DollarSign, Package, PieChart as PieIcon, Activity, ArrowUpRight } from 'lucide-react';
+import {
+  Activity,
+  PieChart as PieIcon,
+  TrendingUp,
+  Package
+} from 'lucide-react';
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, staggerChildren: 0.08 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35 }
+  }
+};
 
 const Financials = () => {
   const [reportData, setReportData] = useState(null);
@@ -19,12 +42,17 @@ const Financials = () => {
         setReportData(data);
         setLoading(false);
       })
-      .catch(err => console.error("Analytics Stream Offline"));
+      .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="p-20 text-center animate-pulse text-[#D4AF37] font-black tracking-[0.5em]">INITIALIZING ANALYTICS...</div>;
+  if (loading) {
+    return (
+      <div className="p-20 text-center text-[#D4AF37] font-black tracking-[0.4em]">
+        LOADING ANALYTICS...
+      </div>
+    );
+  }
 
-  // Formatting category data for Recharts
   const chartData = Object.keys(reportData.categoryValuations).map(key => ({
     name: key.toUpperCase(),
     value: reportData.categoryValuations[key],
@@ -32,89 +60,135 @@ const Financials = () => {
   }));
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="space-y-10 text-left pt-6"
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-8"
     >
-      {/* HEADER REMOVED: Title is now handled by AdminDashboard.jsx parent */}
+      {/* HEADER */}
+      <motion.div
+        variants={itemVariants}
+        className="rounded-[28px] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6"
+      >
+        <p className="text-xs uppercase tracking-[0.3em] text-[#D4AF37] mb-2">
+          Financial Analytics
+        </p>
+        <h2 className="text-3xl font-black text-white">
+          System Financial Overview
+        </h2>
+      </motion.div>
 
-      {/* --- TOP STATS --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="p-10 border border-white/5 bg-white/[0.01] backdrop-blur-md relative overflow-hidden group shadow-2xl">
-          <div className="absolute top-0 left-0 w-1 h-full bg-[#D4AF37]" />
-          <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-bold mb-4 text-left">Total Stock Valuation</p>
-          <h3 className="text-5xl font-black tracking-tighter text-[#D4AF37] text-left">
-            LKR {reportData.totalStockValue.toLocaleString()}
-          </h3>
-          <div className="mt-6 flex items-center gap-2 text-[10px] font-black text-green-500 text-left">
-            <ArrowUpRight size={14}/> SYSTEM STABLE
-          </div>
-        </div>
+      {/* STATS */}
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+      >
+        <StatCard
+          title="Total Stock Value"
+          value={`LKR ${reportData.totalStockValue.toLocaleString()}`}
+          icon={<TrendingUp className="text-[#D4AF37]" size={22} />}
+          accent="gold"
+        />
 
-        <div className="p-10 border border-white/5 bg-white/[0.01] backdrop-blur-md relative overflow-hidden group text-right shadow-2xl">
-          <div className="absolute top-0 right-0 w-1 h-full bg-white/20" />
-          <p className="text-gray-500 text-[10px] uppercase tracking-[0.3em] font-bold mb-4">Gross Asset Volume</p>
-          <h3 className="text-5xl font-black tracking-tighter text-white">
-            {reportData.totalUnitsStored.toLocaleString()} <span className="text-xl text-gray-600">UNITS</span>
-          </h3>
-          <p className="mt-6 text-[10px] font-bold text-gray-600 uppercase tracking-widest">Across {chartData.length} active categories</p>
-        </div>
-      </div>
+        <StatCard
+          title="Total Units"
+          value={`${reportData.totalUnitsStored.toLocaleString()}`}
+          subtitle="UNITS"
+          icon={<Package className="text-emerald-400" size={22} />}
+          accent="default"
+        />
 
-      {/* --- CHARTS GRID --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Category Valuation (Donut) */}
-        <div className="p-10 border border-white/5 bg-white/[0.01] backdrop-blur-md h-[500px] shadow-xl">
-          <h3 className="text-xs font-black tracking-[0.4em] uppercase text-gray-400 mb-10 flex items-center gap-3 text-left">
-            <PieIcon size={16} /> Valuation Distribution
+        <StatCard
+          title="Categories"
+          value={chartData.length}
+          subtitle="ACTIVE"
+          icon={<Activity className="text-cyan-400" size={22} />}
+          accent="default"
+        />
+      </motion.div>
+
+      {/* CHARTS */}
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        {/* PIE CHART */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 h-[420px]">
+          <h3 className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-6 flex items-center gap-2">
+            <PieIcon size={14} /> Category Valuation
           </h3>
-          <ResponsiveContainer width="100%" height="80%">
+
+          <ResponsiveContainer width="100%" height="85%">
             <PieChart>
               <Pie
                 data={chartData}
-                innerRadius={80}
-                outerRadius={120}
-                paddingAngle={5}
+                innerRadius={70}
+                outerRadius={110}
                 dataKey="value"
               >
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#000', border: '1px solid rgba(212,175,55,0.2)', color: '#fff' }}
-                itemStyle={{ color: '#D4AF37', fontSize: '10px', textTransform: 'uppercase' }}
+
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#000',
+                  border: '1px solid rgba(212,175,55,0.2)'
+                }}
               />
-              <Legend wrapperStyle={{ fontSize: '9px', fontWeight: 'bold', paddingTop: '20px' }} />
+
+              <Legend wrapperStyle={{ fontSize: '10px' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Unit Count (Bar Chart) */}
-        <div className="p-10 border border-white/5 bg-white/[0.01] backdrop-blur-md h-[500px] shadow-xl">
-          <h3 className="text-xs font-black tracking-[0.4em] uppercase text-gray-400 mb-10 flex items-center gap-3 text-left">
-            <Activity size={16} /> Asset Inventory Density
+        {/* BAR CHART */}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 h-[420px]">
+          <h3 className="text-xs uppercase tracking-[0.3em] text-gray-400 mb-6 flex items-center gap-2">
+            <Activity size={14} /> Inventory Density
           </h3>
-          <ResponsiveContainer width="100%" height="80%">
+
+          <ResponsiveContainer width="100%" height="85%">
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-              <XAxis dataKey="name" stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
-              <YAxis stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
-              <Tooltip 
-                  cursor={{ fill: 'rgba(212,175,55,0.05)' }}
-                  contentStyle={{ backgroundColor: '#000', border: '1px solid rgba(212,175,55,0.2)' }}
-                  itemStyle={{ color: '#D4AF37', fontSize: '10px' }}
-              />
-              <Bar dataKey="units" fill="#D4AF37" radius={[4, 4, 0, 0]} barSize={40} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+              <XAxis dataKey="name" stroke="#666" />
+              <YAxis stroke="#666" />
+              <Tooltip />
+
+              <Bar dataKey="units" fill="#D4AF37" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-
-      </div>
-
-      <style>{`.stroke-text { -webkit-text-stroke: 1px rgba(212, 175, 55, 0.4); color: transparent; }`}</style>
+      </motion.div>
     </motion.div>
+  );
+};
+
+const StatCard = ({ title, value, subtitle, icon, accent = 'default' }) => {
+  const styles = {
+    default: 'border-white/10 bg-white/[0.04]',
+    gold: 'border-[#D4AF37]/20 bg-[#D4AF37]/10'
+  };
+
+  return (
+    <div className={`rounded-3xl border ${styles[accent]} p-5`}>
+      <div className="flex justify-between items-center">
+        <div>
+          <p className="text-xs uppercase text-gray-400 tracking-widest">
+            {title}
+          </p>
+          <h3 className="text-xl font-black mt-2">{value}</h3>
+          {subtitle && (
+            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+          )}
+        </div>
+        <div className="w-12 h-12 flex items-center justify-center bg-white/5 rounded-xl">
+          {icon}
+        </div>
+      </div>
+    </div>
   );
 };
 
