@@ -20,7 +20,9 @@ import {
   Boxes,
   Wallet,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Warehouse,
+  Truck
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -232,13 +234,13 @@ const AdminDashboard = () => {
         return {
           eyebrow: 'Inventory Stock',
           title: 'Inventory Management',
-          sub: 'Track stock, products, and warehouse availability.'
+          sub: 'Track stock, stock flow, low-stock alerts, and warehouse availability.'
         };
       case 'suppliers':
         return {
-          eyebrow: '',
-          title: '',
-          sub: ''
+          eyebrow: 'Supplier Network',
+          title: 'Supplier Registry',
+          sub: 'Manage suppliers, supplier records, and future product linking operations.'
         };
       default:
         return {
@@ -395,10 +397,8 @@ const AdminDashboard = () => {
         />
 
         <div className="px-6 lg:px-10 py-8 lg:py-10">
-          {/* SHOW TOP HEADER ONLY FOR PAGES THAT STILL NEED IT */}
-          {activeTab !== 'suppliers' &&
-            activeTab !== 'inventory' &&
-            activeTab !== 'clients' &&
+          {/* TOP HEADER */}
+          {activeTab !== 'clients' &&
             activeTab !== 'financials' &&
             activeTab !== 'config' &&
             activeTab !== 'promotions' && (
@@ -494,6 +494,28 @@ const AdminDashboard = () => {
                   />
                 </motion.div>
 
+                <motion.div
+                  variants={staggerWrap}
+                  initial="hidden"
+                  animate="show"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
+                  <QuickAccessCard
+                    icon={<Warehouse size={24} />}
+                    title="Inventory Operations"
+                    desc="Open stock dashboard, monitor product quantities, and continue stock control tasks."
+                    actionLabel="Open Inventory"
+                    onClick={() => setActiveTab('inventory')}
+                  />
+                  <QuickAccessCard
+                    icon={<Truck size={24} />}
+                    title="Supplier Operations"
+                    desc="Access supplier registry, maintain supplier records, and manage procurement-side data."
+                    actionLabel="Open Suppliers"
+                    onClick={() => setActiveTab('suppliers')}
+                  />
+                </motion.div>
+
                 <motion.div variants={fadeUp} initial="hidden" animate="show">
                   <DiscountSuggestionPanel onApplyClick={handleApplyDiscountFromAI} />
                 </motion.div>
@@ -528,6 +550,8 @@ const AdminDashboard = () => {
 
                       <div className="space-y-4">
                         <ActionButton label="Add New Product" onClick={() => setIsModalOpen(true)} />
+                        <ActionButton label="Open Inventory Panel" onClick={() => setActiveTab('inventory')} />
+                        <ActionButton label="Open Supplier Registry" onClick={() => setActiveTab('suppliers')} />
                         <ActionButton label="Fiscal Analytics" onClick={() => setActiveTab('financials')} />
                         <ActionButton
                           label="Stock Audit View"
@@ -764,6 +788,31 @@ const StatCard = ({ icon, label, value, sub, trend }) => (
       <ArrowUpRight size={14} />
       {trend}
     </div>
+  </motion.div>
+);
+
+const QuickAccessCard = ({ icon, title, desc, actionLabel, onClick }) => (
+  <motion.div
+    variants={fadeUp}
+    whileHover={{ y: -6, borderColor: 'rgba(212,175,55,0.28)' }}
+    className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-7 shadow-[0_18px_50px_rgba(0,0,0,0.24)]"
+  >
+    <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/12 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] mb-5">
+      {icon}
+    </div>
+
+    <h3 className="text-2xl font-bold text-white">{title}</h3>
+    <p className="mt-3 text-sm text-gray-400 leading-relaxed">{desc}</p>
+
+    <motion.button
+      whileHover={{ x: 4 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="mt-6 inline-flex items-center gap-2 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-3 text-sm font-semibold text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-all"
+    >
+      {actionLabel}
+      <ArrowUpRight size={16} />
+    </motion.button>
   </motion.div>
 );
 
