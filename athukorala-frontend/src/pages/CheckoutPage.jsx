@@ -130,9 +130,21 @@ const CheckoutPage = () => {
       // 🔥 EVENTS
       window.payhere.onCompleted = function () {
         toast.success("Payment Successful!");
+
         localStorage.removeItem("cart");
         localStorage.removeItem("lastCartTotal");
-        setIsSuccess(true);
+
+        // 🚀 Navigate to premium success page with data
+        navigate("/payment-success", {
+          state: {
+            order: {
+              id: result.orderId,
+              total: result.amount,
+              phone: formatPhoneNumber(formData.phone),
+              address: formData.address,
+            },
+          },
+        });
       };
 
       window.payhere.onDismissed = function () {
