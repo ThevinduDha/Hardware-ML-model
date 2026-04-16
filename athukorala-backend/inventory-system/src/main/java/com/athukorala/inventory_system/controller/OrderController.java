@@ -94,4 +94,23 @@ public class OrderController {
             return ResponseEntity.ok(updatedOrder);
         }).orElse(ResponseEntity.notFound().build());
     }
+    @PatchMapping("/approve/{id}")
+    public ResponseEntity<Order> approveOrder(@PathVariable Long id) {
+        return orderRepository.findById(id).map(order -> {
+            order.setStatus("APPROVED");
+            return ResponseEntity.ok(orderRepository.save(order));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/reject/{id}")
+    public ResponseEntity<Order> rejectOrder(
+            @PathVariable Long id,
+            @RequestParam(required = false) String reason
+    ) {
+        return orderRepository.findById(id).map(order -> {
+            order.setStatus("REJECTED");
+            order.setRejectionReason(reason);
+            return ResponseEntity.ok(orderRepository.save(order));
+        }).orElse(ResponseEntity.notFound().build());
+    }
 }
