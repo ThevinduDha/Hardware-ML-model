@@ -34,6 +34,7 @@ public class Order {
     // 🔹 STATUS (PENDING / PAID / CANCELLED)
     @Column(nullable = false)
     private String status = "PENDING";
+    private String rejectionReason;
 
     // 🔹 DATE
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
