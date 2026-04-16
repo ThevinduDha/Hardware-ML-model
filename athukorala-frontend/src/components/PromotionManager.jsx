@@ -11,6 +11,8 @@ import {
   X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -32,6 +34,7 @@ const itemVariants = {
 
 const PromotionManager = ({ onSuccess, preSelected, editingItem, onCancelEdit }) => {
   const [products, setProducts] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [categories] = useState(["Electrical", "Plumbing", "Tools", "Paints", "Construction"]);
   const today = new Date().toISOString().split('T')[0];
 
@@ -74,10 +77,78 @@ const PromotionManager = ({ onSuccess, preSelected, editingItem, onCancelEdit })
   }, [editingItem]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/products/all")
-      .then(res => res.json())
-      .then(data => setProducts(data || []));
+    fetchProducts();
+    fetchPromotions();
   }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/products/all");
+      const data = await res.json();
+      setProducts(data || []);
+    } catch (err) {
+      console.error("Failed to fetch products", err);
+    }
+  };
+
+  const fetchPromotions = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/promotions/all");
+      const data = await res.json();
+      setPromotions(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch promotions", err);
+      setPromotions([]);
+    }
+  };
+
+  const generatePromotionReport = () => {
+    const doc = new jsPDF();
+
+    // HEADER
+    doc.setFontSize(20);
+    doc.text("ATHUKORALA TRADERS", 105, 20, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text("Promotion Intelligence Report", 105, 28, { align: "center" });
+
+    const now = new Date();
+    doc.text(`Generated: ${now.toLocaleString()}`, 14, 40);
+
+    // TABLE DATA
+    const tableData = (Array.isArray(promotions) ? promotions : []).map((p) => {
+      const status = new Date(p.endDate) < new Date() ? "Expired" : "Active";
+
+      return [
+        p.title,
+        p.type === "PERCENTAGE" ? `${p.value}%` : `LKR ${p.value}`,
+        p.targetType === "PRODUCT"
+          ? `Product #${p.targetId}`
+          : p.targetCategory,
+        p.startDate,
+        p.endDate,
+        status
+      ];
+    });
+
+    // TABLE
+    autoTable(doc, {
+      startY: 50,
+      head: [["Title", "Discount", "Target", "Start", "End", "Status"]],
+      body: tableData,
+      styles: { fontSize: 9 },
+      headStyles: {
+        fillColor: [212, 175, 55],
+        textColor: 0
+      },
+      alternateRowStyles: {
+        fillColor: [20, 20, 20]
+      }
+    });
+
+    doc.save("promotion_report.pdf");
+    toast.success("Report exported successfully!");
+  };
 
   const handleProcessProtocol = async (e) => {
     e.preventDefault();
@@ -134,6 +205,7 @@ const PromotionManager = ({ onSuccess, preSelected, editingItem, onCancelEdit })
         });
 
         if (onSuccess) onSuccess();
+        fetchPromotions(); // Refresh the list
       } else {
         const errorText = await res.text();
         console.error("Registry Rejection Details:", errorText);
@@ -361,6 +433,90 @@ const PromotionManager = ({ onSuccess, preSelected, editingItem, onCancelEdit })
         </div>
       </motion.div>
 
+      {/* RUNNING PROMOTIONS SECTION WITH EXPORT BUTTON */}
+      <motion.div
+        variants={itemVariants}
+        className="rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] backdrop-blur-2xl p-6 lg:p-7"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center">
+                <Percent size={14} className="text-[#D4AF37]" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Running Promotions</h2>
+            </div>
+            <p className="text-xs text-gray-500 ml-11">
+              Active and scheduled discount protocols
+            </p>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={generatePromotionReport}
+            className="px-5 py-2.5 bg-[#D4AF37] text-black rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg hover:bg-white transition-all flex items-center gap-2"
+          >
+            📄 Export PDF
+          </motion.button>
+        </div>
+
+        <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
+          {promotions.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Percent size={40} className="mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No active promotions</p>
+              <p className="text-xs mt-1">Create a discount protocol above</p>
+            </div>
+          ) : (
+            promotions.map((promo) => {
+              const isExpired = new Date(promo.endDate) < new Date();
+              const isActive = new Date(promo.startDate) <= new Date() && !isExpired;
+              
+              return (
+                <div
+                  key={promo.id}
+                  className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 hover:border-[#D4AF37]/30 transition-all"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="text-white font-bold text-lg">{promo.title}</h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {promo.targetType === 'PRODUCT' ? 'Product-specific' : `Category: ${promo.targetCategory}`}
+                      </p>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      isExpired 
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : isActive
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                    }`}>
+                      {isExpired ? 'EXPIRED' : isActive ? 'ACTIVE' : 'SCHEDULED'}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Zap size={14} className="text-[#D4AF37]" />
+                      <span className="text-gray-300">
+                        {promo.type === 'PERCENTAGE' ? `${promo.value}% OFF` : `LKR ${promo.value} OFF`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-[#D4AF37]" />
+                      <span className="text-gray-400 text-xs">
+                        {promo.startDate} → {promo.endDate}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </motion.div>
+
       <style>{`
         .stroke-text {
           -webkit-text-stroke: 1px rgba(212, 175, 55, 0.4);
@@ -376,6 +532,20 @@ const PromotionManager = ({ onSuccess, preSelected, editingItem, onCancelEdit })
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #D4AF37;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #c4a030;
         }
       `}</style>
     </motion.div>
