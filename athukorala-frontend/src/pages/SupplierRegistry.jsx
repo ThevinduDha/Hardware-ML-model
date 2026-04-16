@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import SupplierContactCard from '../components/SupplierContactCard';
 import ProductSupplierLinkPanel from '../components/ProductSupplierLinkPanel';
 
 const SupplierRegistry = () => {
   const [suppliers, setSuppliers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
@@ -137,15 +138,29 @@ const SupplierRegistry = () => {
             </h2>
           </div>
 
-          {isAdmin && (
-            <button
-              onClick={() => setShowAdd(!showAdd)}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37] font-semibold hover:bg-[#D4AF37]/20 transition"
-            >
-              {showAdd ? <X size={16} /> : <Plus size={16} />}
-              {showAdd ? 'Close Form' : 'Add Supplier'}
-            </button>
-          )}
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* SEARCH INPUT WITH ICON */}
+            <div className="relative w-full md:w-[280px]">
+              <input
+                type="text"
+                placeholder="Search suppliers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37] placeholder-gray-500 transition-all"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            </div>
+
+            {isAdmin && (
+              <button
+                onClick={() => setShowAdd(!showAdd)}
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 text-[#D4AF37] font-semibold hover:bg-[#D4AF37]/20 transition whitespace-nowrap"
+              >
+                {showAdd ? <X size={16} /> : <Plus size={16} />}
+                {showAdd ? 'Close Form' : 'Add Supplier'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -182,7 +197,7 @@ const SupplierRegistry = () => {
             />
 
             <select
-              className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white"
+              className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-[#D4AF37] outline-none transition-all"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             >
@@ -202,18 +217,64 @@ const SupplierRegistry = () => {
         )}
       </AnimatePresence>
 
-      {/* SUPPLIERS */}
+      {/* SUPPLIERS GRID WITH SEARCH FILTER */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {(Array.isArray(suppliers) ? suppliers : []).map((s) => (
-          <SupplierContactCard
-            key={s.id}
-            supplier={s}
-            isAdmin={isAdmin}
-            onEdit={openEdit}
-            onDelete={handleDelete}
-          />
-        ))}
+        {(Array.isArray(suppliers) ? suppliers : [])
+          .filter((s) => {
+            const term = searchTerm.toLowerCase();
+
+            return (
+              s.name?.toLowerCase().includes(term) ||
+              s.contactPerson?.toLowerCase().includes(term) ||
+              s.email?.toLowerCase().includes(term) ||
+              s.phoneNumber?.includes(term)
+            );
+          })
+          .map((s) => (
+            <SupplierContactCard
+              key={s.id}
+              supplier={s}
+              isAdmin={isAdmin}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+            />
+          ))}
       </div>
+
+      {/* EMPTY STATE */}
+      {Array.isArray(suppliers) && suppliers.length > 0 && 
+        suppliers.filter((s) => {
+          const term = searchTerm.toLowerCase();
+          return (
+            s.name?.toLowerCase().includes(term) ||
+            s.contactPerson?.toLowerCase().includes(term) ||
+            s.email?.toLowerCase().includes(term) ||
+            s.phoneNumber?.includes(term)
+          );
+        }).length === 0 && (
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] py-16 px-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-5">
+            <Search className="text-[#D4AF37]" size={28} />
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">No suppliers found</h3>
+          <p className="text-gray-400">
+            No suppliers match your search term "{searchTerm}"
+          </p>
+        </div>
+      )}
+
+      {/* EMPTY DATABASE STATE */}
+      {(!Array.isArray(suppliers) || suppliers.length === 0) && (
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] py-16 px-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-5">
+            <Plus className="text-[#D4AF37]" size={28} />
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">No suppliers registered</h3>
+          <p className="text-gray-400">
+            {isAdmin ? 'Click "Add Supplier" to register your first vendor' : 'Check back later for new suppliers'}
+          </p>
+        </div>
+      )}
 
       {/* PRODUCT ↔ SUPPLIER LINK PANEL */}
       <ProductSupplierLinkPanel />
@@ -223,13 +284,13 @@ const SupplierRegistry = () => {
 
 const InputBox = ({ label, value, onChange, type = 'text' }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-xs text-gray-400">{label}</label>
+    <label className="text-xs text-gray-400 uppercase tracking-wider">{label}</label>
     <input
       required
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-[#D4AF37]"
+      className="bg-black/40 border border-white/10 rounded-xl p-4 text-sm text-white focus:border-[#D4AF37] outline-none transition-all"
     />
   </div>
 );
