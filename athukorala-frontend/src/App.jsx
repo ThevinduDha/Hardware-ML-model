@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast'; 
+
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import PortalPage from './pages/PortalPage';
@@ -19,15 +20,33 @@ import AuditLogView from './pages/AuditLogView';
 import ProtectedRoute from './components/ProtectedRoute'; 
 import OrderSuccess from './pages/OrderSuccess';
 import CuratedList from './pages/CuratedList'; 
-import CustomerProfile from './pages/CustomerProfile'; // NEW: Personal Registry Page
+import CustomerProfile from './pages/CustomerProfile';
 import Inventory from "./pages/Inventory";
 import Suppliers from "./pages/Suppliers";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
-
-
 function App() {
+
+  // ✅ THEME APPLY FIXED
+  useEffect(() => {
+    const applyTheme = () => {
+      const savedTheme = localStorage.getItem("theme") || "dark";
+
+      if (savedTheme === "light") {
+        document.documentElement.classList.remove("dark");
+      } else {
+        document.documentElement.classList.add("dark");
+      }
+    };
+
+    applyTheme();
+
+    window.addEventListener("storage", applyTheme);
+
+    return () => window.removeEventListener("storage", applyTheme);
+  }, []);
+
   return (
     <Router>
       <Toaster 
@@ -42,7 +61,7 @@ function App() {
       />
       
       <Routes>
-        {/* --- PUBLIC ROUTES --- */}
+        {/* PUBLIC */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<AuthPage />} />
         <Route path="/auth" element={<AuthPage />} />
@@ -53,14 +72,12 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         
-        {/* --- CUSTOMER ROUTES --- */}
+        {/* CUSTOMER */}
         <Route path="/shopping-cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-history" element={<OrderHistory />} />
         <Route path="/order-success" element={<OrderSuccess />} />
-        
-        
-        {/* --- NEW: CUSTOMER PROFILE & REGISTRY ROUTE --- */}
+
         <Route 
           path="/profile" 
           element={
@@ -70,7 +87,6 @@ function App() {
           } 
         />
 
-        {/* --- CURATED LIST PROTOCOL ROUTE --- */}
         <Route 
           path="/curated-list" 
           element={
@@ -89,7 +105,7 @@ function App() {
           } 
         />
 
-        {/* --- STAFF ROUTES --- */}
+        {/* STAFF */}
         <Route 
           path="/staff-dashboard" 
           element={
@@ -98,6 +114,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
         <Route 
           path="/staff/adjust-stock" 
           element={
@@ -107,7 +124,7 @@ function App() {
           } 
         />
 
-        {/* --- ADMIN ROUTES: FULL SYSTEM ACCESS --- */}
+        {/* ADMIN */}
         <Route 
           path="/admin-dashboard" 
           element={
@@ -116,6 +133,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
         <Route 
           path="/admin/orders" 
           element={
@@ -124,6 +142,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
         <Route 
           path="/admin/suppliers" 
           element={
@@ -132,6 +151,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
         <Route 
           path="/admin/reports" 
           element={
@@ -140,6 +160,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
         <Route 
           path="/admin/audit-logs" 
           element={
@@ -149,7 +170,7 @@ function App() {
           } 
         />
 
-        {/* --- ERROR HANDLING --- */}
+        {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
