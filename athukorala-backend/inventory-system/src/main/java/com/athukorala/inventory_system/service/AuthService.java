@@ -41,21 +41,15 @@ public class AuthService {
     public User login(String email, String password) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            String storedPassword = user.getPassword();
+        if (userOptional.isEmpty()) {
+            throw new RuntimeException("INVALID IDENTIFIER OR ACCESS KEY");
+        }
 
-            // Normal secure login for hashed passwords
-            if (passwordEncoder.matches(password, storedPassword)) {
-                return user;
-            }
+        User user = userOptional.get();
 
-            // Temporary migration support for old plain-text passwords already in DB
-            if (password.equals(storedPassword)) {
-                user.setPassword(passwordEncoder.encode(password));
-                userRepository.save(user);
-                return user;
-            }
+        // Only use password encoder for verification
+        if (passwordEncoder.matches(password, user.getPassword())) {
+            return user;
         }
 
         throw new RuntimeException("INVALID IDENTIFIER OR ACCESS KEY");
@@ -65,6 +59,7 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("USER NOT FOUND"));
 
+        // Validation
         if (currentPassword == null || currentPassword.isBlank()) {
             throw new RuntimeException("CURRENT PASSWORD IS REQUIRED");
         }
@@ -77,21 +72,39 @@ public class AuthService {
             throw new RuntimeException("NEW PASSWORD MUST BE AT LEAST 6 CHARACTERS");
         }
 
-        if (confirmNewPassword == null || !newPassword.equals(confirmNewPassword)) {
+        if (!newPassword.equals(confirmNewPassword)) {
             throw new RuntimeException("NEW PASSWORD AND CONFIRM PASSWORD DO NOT MATCH");
         }
 
-        String storedPassword = user.getPassword();
-
-        boolean currentPasswordCorrect =
-                passwordEncoder.matches(currentPassword, storedPassword) ||
-                        currentPassword.equals(storedPassword);
-
-        if (!currentPasswordCorrect) {
+        // Verify current password using encoder only
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new RuntimeException("CURRENT PASSWORD IS INCORRECT");
         }
 
+        // Update with new encrypted password
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    // ================= OPTIONAL: MIGRATION UTILITY =================
+    // Run this once to migrate any remaining plain-text passwords
+    public void migratePlainTextPasswords() {
+        Iterable<User> allUsers = userRepository.findAll();
+        int migratedCount = 0;
+
+        for (User user : allUsers) {
+            String currentPwd = user.getPassword();
+
+            // Check if password is not already BCrypt encoded
+            // BCrypt hashes start with "$2a$", "$2b$", or "$2y$"
+            if (currentPwd != null && !currentPwd.startsWith("$2")) {
+                // This is likely plain text - encode it
+                user.setPassword(passwordEncoder.encode(currentPwd));
+                userRepository.save(user);
+                migratedCount++;
+            }
+        }
+
+        System.out.println("Migrated " + migratedCount + " plain-text passwords to BCrypt");
     }
 }
