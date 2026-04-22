@@ -30,6 +30,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { Range, getTrackBackground } from "react-range";
 import CustomerAnnouncement from '../components/CustomerAnnouncement';
+import ThemeToggle from '../components/ThemeToggle';
 
 const CATEGORY_OPTIONS = [
   'ALL',
@@ -262,7 +263,7 @@ const CustomerDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white font-sans overflow-hidden selection:bg-[#D4AF37] selection:text-black">
+    <div className="flex min-h-screen bg-white dark:bg-[#050505] text-black dark:text-white font-sans overflow-hidden selection:bg-[#D4AF37] selection:text-black">
       {/* SIDEBAR */}
       <motion.aside
         animate={{ width: sidebarCollapsed ? 96 : 300 }}
@@ -358,6 +359,9 @@ const CustomerDashboard = () => {
               </div>
             )}
           </div>
+
+          {/* THEME TOGGLE ADDED HERE */}
+          <ThemeToggle />
 
           {!sidebarCollapsed && (
             <div className="rounded-[28px] border border-[#D4AF37]/12 bg-[#D4AF37]/[0.04] p-5">
