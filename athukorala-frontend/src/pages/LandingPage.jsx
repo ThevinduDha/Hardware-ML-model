@@ -140,7 +140,7 @@ const LandingPage = () => {
   const liveNoticeCount = promoAnnouncements.length;
 
   return (
-    <div className="bg-[#050505] min-h-screen text-white overflow-x-hidden selection:bg-[#D4AF37] selection:text-black">
+    <div className="bg-white dark:bg-[#050505] min-h-screen text-black dark:text-white overflow-x-hidden selection:bg-[#D4AF37] selection:text-black">
       <Navbar />
 
       {/* HERO */}
@@ -157,7 +157,7 @@ const LandingPage = () => {
           }}
         />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/68 to-[#050505]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/68 to-[#050505] dark:from-black/90 dark:via-black/68 dark:to-[#050505] from-white/90 via-white/68 to-white" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.10),transparent_35%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:44px_44px] opacity-20" />
 
@@ -209,11 +209,11 @@ const LandingPage = () => {
               transition={{ delay: 0.25, duration: 0.8 }}
               className="mb-4"
             >
-              <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.38em] text-gray-500 mb-3">
+              <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.38em] text-gray-500 dark:text-gray-500 mb-3">
                 Industrial Supply • Electrical • Plumbing • Coatings
               </p>
 
-              <h1 className="text-5xl sm:text-7xl md:text-[6.5rem] lg:text-[7rem] xl:text-[7.5rem] font-black tracking-[-0.07em] leading-none text-white">
+              <h1 className="text-5xl sm:text-7xl md:text-[6.5rem] lg:text-[7rem] xl:text-[7.5rem] font-black tracking-[-0.07em] leading-none text-black dark:text-white">
                 ATHUKORALA
               </h1>
 
@@ -254,7 +254,7 @@ const LandingPage = () => {
           <div className="max-w-5xl mx-auto text-center">
             <motion.p
               variants={softReveal}
-              className="max-w-3xl mx-auto text-sm sm:text-base md:text-lg text-gray-300 leading-relaxed mb-8"
+              className="max-w-3xl mx-auto text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-8"
             >
               Industrial-grade tools, electrical supplies, plumbing solutions, and premium
               coatings — delivered with trust, quality, and modern service excellence.
@@ -306,7 +306,7 @@ const LandingPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.04, boxShadow: '0 0 40px rgba(212,175,55,0.18)' }}
                     whileTap={{ scale: 0.97 }}
-                    className="group relative px-8 sm:px-10 py-5 rounded-2xl border border-[#D4AF37] text-[#D4AF37] font-bold overflow-hidden hover:text-black min-w-[250px] bg-black/30 backdrop-blur-xl"
+                    className="group relative px-8 sm:px-10 py-5 rounded-2xl border border-[#D4AF37] text-[#D4AF37] font-bold overflow-hidden hover:text-black min-w-[250px] bg-black/30 dark:bg-black/30 backdrop-blur-xl"
                   >
                     <span className="relative z-10 tracking-[0.24em] uppercase flex items-center justify-center gap-3 text-sm">
                       <Lock size={18} />
@@ -322,13 +322,13 @@ const LandingPage = () => {
                   <motion.button
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.97 }}
-                    className="group relative px-8 sm:px-10 py-5 rounded-2xl border border-white/10 text-white font-bold overflow-hidden min-w-[250px] bg-white/5 backdrop-blur-xl"
+                    className="group relative px-8 sm:px-10 py-5 rounded-2xl border border-gray-200 dark:border-white/10 text-black dark:text-white font-bold overflow-hidden min-w-[250px] bg-gray-100 dark:bg-white/5 backdrop-blur-xl"
                   >
                     <span className="relative z-10 tracking-[0.24em] uppercase flex items-center justify-center gap-3 text-sm">
                       <User size={18} />
                       Client Portal
                     </span>
-                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 bg-gray-200 dark:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </motion.button>
                 </Link>
               </motion.div>
@@ -356,7 +356,7 @@ const LandingPage = () => {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.15 }}
-        className="relative z-30 py-10 mt-8 bg-[#0a0a0a] border-y border-white/5 overflow-hidden whitespace-nowrap"
+        className="relative z-30 py-10 mt-8 bg-gray-100 dark:bg-[#0a0a0a] border-y border-gray-200 dark:border-white/5 overflow-hidden whitespace-nowrap"
       >
         <motion.div
           animate={{ x: [0, -1200] }}
@@ -376,7 +376,7 @@ const LandingPage = () => {
             <span
               key={index}
               className={`text-4xl font-black mx-10 uppercase tracking-tighter ${
-                index % 2 === 0 ? 'text-white/10' : 'text-[#D4AF37]/20'
+                index % 2 === 0 ? 'text-gray-300 dark:text-white/10' : 'text-[#D4AF37]/20'
               }`}
             >
               {brand}
@@ -397,10 +397,10 @@ const LandingPage = () => {
           <p className="text-[#D4AF37] text-xs uppercase tracking-[0.4em] mb-4">
             Why Choose Us
           </p>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase text-black dark:text-white">
             Built for Reliability
           </h2>
-          <p className="text-gray-400 mt-6 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-400 mt-6 max-w-2xl mx-auto leading-relaxed">
             From home projects to industrial operations, we supply dependable materials
             with consistent quality and service.
           </p>
@@ -443,7 +443,7 @@ const LandingPage = () => {
           <p className="text-[#D4AF37] text-xs uppercase tracking-[0.4em] mb-4">
             Our Categories
           </p>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase text-black dark:text-white">
             Core Product Lines
           </h2>
         </motion.div>
@@ -468,7 +468,7 @@ const LandingPage = () => {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.12 }}
-        className="relative z-20 py-28 bg-[#050505] overflow-hidden"
+        className="relative z-20 py-28 bg-white dark:bg-[#050505] overflow-hidden"
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(212,175,55,0.08),transparent_30%)]" />
 
@@ -482,7 +482,7 @@ const LandingPage = () => {
             <p className="text-[#D4AF37] text-xs uppercase tracking-[0.4em] mb-4">
               Visit Us
             </p>
-            <h2 className="text-4xl md:text-6xl font-black mb-12 uppercase tracking-tighter leading-tight">
+            <h2 className="text-4xl md:text-6xl font-black mb-12 uppercase tracking-tighter leading-tight text-black dark:text-white">
               Pitigala
               <br />
               <span className="text-[#D4AF37]">Headquarters</span>
@@ -509,7 +509,7 @@ const LandingPage = () => {
               className="mt-10 p-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 flex items-start gap-4"
             >
               <CheckCircle2 className="text-[#D4AF37] mt-1" size={18} />
-              <p className="text-sm text-gray-300 leading-relaxed">
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 Trusted by customers looking for strong materials, dependable service,
                 and premium product sourcing for real projects.
               </p>
@@ -521,7 +521,7 @@ const LandingPage = () => {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.2 }}
-            className="p-8 md:p-10 bg-white/5 border border-white/10 rounded-[30px] backdrop-blur-xl relative overflow-hidden group shadow-[0_20px_70px_rgba(0,0,0,0.28)]"
+            className="p-8 md:p-10 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-[30px] backdrop-blur-xl relative overflow-hidden group shadow-[0_20px_70px_rgba(0,0,0,0.28)]"
           >
             <div className="absolute top-0 right-0 p-8 text-[#D4AF37]/5 group-hover:text-[#D4AF37]/10 transition-colors">
               <Clock size={120} />
@@ -539,10 +539,10 @@ const LandingPage = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.06, duration: 0.45 }}
-                  className="flex justify-between items-center border-b border-white/5 pb-3"
+                  className="flex justify-between items-center border-b border-gray-200 dark:border-white/5 pb-3"
                 >
-                  <span className="text-gray-400 font-light">{day}</span>
-                  <span className="font-mono text-sm tracking-tight">
+                  <span className="text-gray-600 dark:text-gray-400 font-light">{day}</span>
+                  <span className="font-mono text-sm tracking-tight text-black dark:text-white">
                     08:00 AM – 05:30 PM
                   </span>
                 </motion.div>
@@ -573,16 +573,16 @@ const LandingPage = () => {
         viewport={{ once: true, amount: 0.2 }}
         className="relative z-20 py-24 px-6"
       >
-        <div className="max-w-6xl mx-auto text-center rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl px-6 md:px-12 py-14 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto text-center rounded-[32px] border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 backdrop-blur-xl px-6 md:px-12 py-14 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08),transparent_45%)]" />
           <p className="relative z-10 text-[#D4AF37] text-xs uppercase tracking-[0.4em] mb-4">
             Start Now
           </p>
-          <h2 className="relative z-10 text-4xl md:text-6xl font-black tracking-tighter uppercase leading-tight">
+          <h2 className="relative z-10 text-4xl md:text-6xl font-black tracking-tighter uppercase leading-tight text-black dark:text-white">
             Enter The Premium
             <span className="text-[#D4AF37]"> Hardware Experience</span>
           </h2>
-          <p className="relative z-10 text-gray-400 mt-6 max-w-2xl mx-auto leading-relaxed">
+          <p className="relative z-10 text-gray-600 dark:text-gray-400 mt-6 max-w-2xl mx-auto leading-relaxed">
             Access the customer portal or secure industrial portal to explore products,
             services, and premium business operations.
           </p>
@@ -611,7 +611,7 @@ const LandingPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
-                  className="px-8 py-4 rounded-2xl border border-white/15 bg-white/5 text-white font-black uppercase tracking-[0.2em]"
+                  className="px-8 py-4 rounded-2xl border border-gray-200 dark:border-white/15 bg-gray-100 dark:bg-white/5 text-black dark:text-white font-black uppercase tracking-[0.2em]"
                 >
                   Industrial Access
                 </motion.button>
@@ -645,8 +645,8 @@ const LandingPage = () => {
         </a>
       </motion.div>
 
-      <footer className="py-16 border-t border-white/5 text-center">
-        <p className="text-gray-700 text-[10px] uppercase tracking-[0.7em] font-bold px-4">
+      <footer className="py-16 border-t border-gray-200 dark:border-white/5 text-center">
+        <p className="text-gray-400 dark:text-gray-700 text-[10px] uppercase tracking-[0.7em] font-bold px-4">
           Athukorala Traders (Pvt) Ltd • Engineering Excellence Since 1998
         </p>
       </footer>
@@ -667,7 +667,7 @@ const HeroPromotionShowcase = ({
     return (
       <motion.div
         whileHover={{ y: -4 }}
-        className="relative overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6 md:p-8"
+        className="relative overflow-hidden rounded-[36px] border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/[0.04] backdrop-blur-2xl p-6 md:p-8"
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.10),transparent_35%)]" />
         <motion.div
@@ -683,18 +683,18 @@ const HeroPromotionShowcase = ({
               Promotion Space Ready
             </div>
 
-            <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tight leading-tight">
+            <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tight leading-tight text-black dark:text-white">
               Your discount banner
               <span className="text-[#D4AF37]"> can appear here beautifully</span>
             </h3>
 
-            <p className="text-sm md:text-base text-gray-400 mt-4 max-w-2xl leading-relaxed">
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-4 max-w-2xl leading-relaxed">
               When you add a customer announcement, this section can show title, message,
               dates, and image in a premium hero layout.
             </p>
           </div>
 
-          <div className="w-full lg:w-[320px] h-[220px] rounded-[24px] border border-white/10 bg-black/40 flex items-center justify-center text-gray-500">
+          <div className="w-full lg:w-[320px] h-[220px] rounded-[24px] border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/40 flex items-center justify-center text-gray-500">
             <div className="text-center">
               <ImageIcon size={40} className="mx-auto mb-3 text-[#D4AF37]" />
               <p className="text-xs uppercase tracking-[0.25em]">Image Preview Area</p>
@@ -717,7 +717,7 @@ const HeroPromotionShowcase = ({
         className={`relative overflow-hidden rounded-[36px] border backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.35)] ${
           isUpcoming
             ? 'border-blue-500/25 bg-blue-500/[0.04]'
-            : 'border-[#D4AF37]/25 bg-[linear-gradient(135deg,rgba(212,175,55,0.12),rgba(255,255,255,0.03))]'
+            : 'border-[#D4AF37]/25 bg-[linear-gradient(135deg,rgba(212,175,55,0.12),rgba(255,255,255,0.03))] dark:bg-[linear-gradient(135deg,rgba(212,175,55,0.12),rgba(255,255,255,0.03))]'
         }`}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.14),transparent_28%)]" />
@@ -770,12 +770,12 @@ const HeroPromotionShowcase = ({
                   : {}
               }
               transition={{ duration: 3, repeat: Infinity }}
-              className="text-3xl md:text-5xl xl:text-[3.5rem] font-black uppercase tracking-tight leading-[0.95]"
+              className="text-3xl md:text-5xl xl:text-[3.5rem] font-black uppercase tracking-tight leading-[0.95] text-black dark:text-white"
             >
               {currentAnnouncement.title}
             </motion.h3>
 
-            <p className="text-sm md:text-base lg:text-lg text-gray-300 mt-3 leading-relaxed max-w-3xl">
+            <p className="text-sm md:text-base lg:text-lg text-gray-600 dark:text-gray-300 mt-3 leading-relaxed max-w-3xl">
               {currentAnnouncement.message}
             </p>
 
@@ -798,7 +798,7 @@ const HeroPromotionShowcase = ({
                   disabled={isUpcoming}
                   className={`px-6 py-3.5 rounded-2xl font-black uppercase tracking-[0.18em] text-xs flex items-center justify-center gap-2 ${
                     isUpcoming
-                      ? 'bg-white/5 text-gray-500 border border-white/10 cursor-not-allowed'
+                      ? 'bg-gray-100 dark:bg-white/5 text-gray-500 border border-gray-200 dark:border-white/10 cursor-not-allowed'
                       : 'bg-[#D4AF37] text-black'
                   }`}
                 >
@@ -814,7 +814,7 @@ const HeroPromotionShowcase = ({
                       key={i}
                       onClick={() => setPromoIndex(i)}
                       className={`rounded-full transition-all duration-500 ${
-                        i === promoIndex ? 'w-10 h-2 bg-[#D4AF37]' : 'w-2 h-2 bg-white/20'
+                        i === promoIndex ? 'w-10 h-2 bg-[#D4AF37]' : 'w-2 h-2 bg-gray-400 dark:bg-white/20'
                       }`}
                     />
                   ))}
@@ -823,7 +823,7 @@ const HeroPromotionShowcase = ({
             </div>
           </div>
 
-          <div className="relative min-h-[220px] lg:min-h-full border-t lg:border-t-0 lg:border-l border-white/10">
+          <div className="relative min-h-[220px] lg:min-h-full border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-white/10">
             {imageUrl ? (
               <div className="absolute inset-0 overflow-hidden">
                 <motion.img
@@ -897,7 +897,7 @@ const MiniChip = ({ icon, text }) => (
       }
     }}
     whileHover={{ y: -2, borderColor: 'rgba(212,175,55,0.3)' }}
-    className="px-4 py-2.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl flex items-center gap-2 text-xs text-gray-200"
+    className="px-4 py-2.5 rounded-full border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 backdrop-blur-xl flex items-center gap-2 text-xs text-gray-800 dark:text-gray-200"
   >
     <span className="text-[#D4AF37]">{icon}</span>
     <span>{text}</span>
@@ -905,7 +905,7 @@ const MiniChip = ({ icon, text }) => (
 );
 
 const MetaPill = ({ icon, text }) => (
-  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-xs text-gray-300">
+  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 text-xs text-gray-800 dark:text-gray-300">
     <span className="text-[#D4AF37]">{icon}</span>
     <span>{text}</span>
   </div>
@@ -922,7 +922,7 @@ const PremiumBadge = ({ icon, text }) => (
       }
     }}
     whileHover={{ y: -3, borderColor: 'rgba(212,175,55,0.35)' }}
-    className="px-4 py-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl flex items-center gap-3 text-sm text-gray-200"
+    className="px-4 py-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 backdrop-blur-xl flex items-center gap-3 text-sm text-gray-800 dark:text-gray-200"
   >
     <span className="text-[#D4AF37]">{icon}</span>
     <span>{text}</span>
@@ -940,13 +940,13 @@ const FeatureCard = ({ icon, title, text }) => (
       }
     }}
     whileHover={{ y: -8, borderColor: 'rgba(212,175,55,0.4)' }}
-    className="rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-xl p-8"
+    className="rounded-[28px] border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 backdrop-blur-xl p-8"
   >
     <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] mb-6">
       {icon}
     </div>
-    <h3 className="text-2xl font-bold tracking-tight mb-4">{title}</h3>
-    <p className="text-gray-400 leading-relaxed">{text}</p>
+    <h3 className="text-2xl font-bold tracking-tight mb-4 text-black dark:text-white">{title}</h3>
+    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{text}</p>
   </motion.div>
 );
 
@@ -965,13 +965,13 @@ const CategoryCard = ({ icon, title, count }) => (
       borderColor: 'rgba(212, 175, 55, 0.4)',
       y: -10
     }}
-    className="p-8 md:p-10 rounded-[28px] border border-white/5 bg-[#0a0a0a] group cursor-pointer relative overflow-hidden transition-all"
+    className="p-8 md:p-10 rounded-[28px] border border-gray-200 dark:border-white/5 bg-gray-100 dark:bg-[#0a0a0a] group cursor-pointer relative overflow-hidden transition-all"
   >
     <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     <div className="text-[#D4AF37] mb-8 group-hover:scale-110 transition-transform duration-500">
       {icon}
     </div>
-    <p className="text-3xl font-black mb-2 tracking-tighter group-hover:text-[#D4AF37] transition-colors">
+    <p className="text-3xl font-black mb-2 tracking-tighter text-black dark:text-white group-hover:text-[#D4AF37] transition-colors">
       {count}
     </p>
     <h3 className="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold">
@@ -993,7 +993,7 @@ const ContactLink = ({ icon, label, val, isLink }) => (
     whileHover={{ x: 8 }}
     className="flex items-center gap-5 group cursor-pointer"
   >
-    <div className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
+    <div className="w-14 h-14 rounded-full border border-gray-200 dark:border-white/10 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
       {icon}
     </div>
     <div>
@@ -1001,7 +1001,7 @@ const ContactLink = ({ icon, label, val, isLink }) => (
         {label}
       </p>
       <p
-        className={`text-lg md:text-xl font-medium ${
+        className={`text-lg md:text-xl font-medium text-black dark:text-white ${
           isLink ? 'underline decoration-[#D4AF37]/30 group-hover:text-[#D4AF37]' : ''
         } transition-colors`}
       >
