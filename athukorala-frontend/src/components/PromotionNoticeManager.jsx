@@ -11,7 +11,9 @@ import {
   Image as ImageIcon,
   ShieldCheck,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ImageUpload from '../components/ImageUpload';
@@ -50,6 +52,21 @@ const PromotionNoticeManager = ({
   const [showPreview, setShowPreview] = useState(true);
   const [imageUrl, setImageUrl] = useState('');
 
+  // Validation tracking
+  const [touched, setTouched] = useState({
+    title: false,
+    message: false,
+    startDate: false,
+    expiryDate: false
+  });
+
+  const [errors, setErrors] = useState({
+    title: null,
+    message: null,
+    startDate: null,
+    expiryDate: null
+  });
+
   const [formData, setFormData] = useState({
     title: '',
     message: '',
@@ -69,10 +86,10 @@ const PromotionNoticeManager = ({
           formDesc: 'Create and publish internal communication notices with premium registry styling.',
           imageTitle: 'Notice Image',
           imageDesc: 'Upload, replace, or remove the banner image used for the notice preview.',
-          titleLabel: 'Notice Designation',
-          titlePlaceholder: 'e.g. Emergency Warehouse Audit',
-          messageLabel: 'Operational Instructions',
-          messagePlaceholder: 'Enter full details and required staff actions...',
+          titleLabel: 'NOTICE DESIGNATION',
+          titlePlaceholder: 'E.G. EMERGENCY WAREHOUSE AUDIT',
+          messageLabel: 'OPERATIONAL INSTRUCTIONS',
+          messagePlaceholder: 'ENTER FULL DETAILS AND REQUIRED STAFF ACTIONS...',
           primaryButton: editingNotice ? 'Update Notice' : 'Initialize Broadcast',
           loadingText: editingNotice ? 'Updating Notice...' : 'Publishing Notice...',
           noteTitle: 'Transmission Note',
@@ -80,8 +97,8 @@ const PromotionNoticeManager = ({
             'The uploaded image will be stored in Cloudinary and linked to this notice record during deployment.',
           previewTitle: 'Live Notice Preview',
           previewSubtitle: 'How the broadcast may appear inside the system',
-          priorityOn: 'High Priority Active',
-          priorityOff: 'Normal Priority',
+          priorityOn: 'HIGH PRIORITY ACTIVE',
+          priorityOff: 'NORMAL PRIORITY',
           targetRole: 'STAFF'
         }
       : {
@@ -93,10 +110,10 @@ const PromotionNoticeManager = ({
           formDesc: 'Create and publish customer campaigns with the same premium system styling.',
           imageTitle: 'Promotion Image',
           imageDesc: 'Upload, replace, or remove the campaign image.',
-          titleLabel: 'Promotion Title',
-          titlePlaceholder: 'e.g. April Mega Discount',
-          messageLabel: 'Message',
-          messagePlaceholder: 'Enter the campaign message shown to customers...',
+          titleLabel: 'PROMOTION TITLE',
+          titlePlaceholder: 'E.G. APRIL MEGA DISCOUNT',
+          messageLabel: 'MESSAGE',
+          messagePlaceholder: 'ENTER THE CAMPAIGN MESSAGE SHOWN TO CUSTOMERS...',
           primaryButton: editingNotice ? 'Update Promotion' : 'Publish Promotion',
           loadingText: editingNotice ? 'Updating Promotion...' : 'Publishing Promotion...',
           noteTitle: 'Deployment Note',
@@ -104,10 +121,77 @@ const PromotionNoticeManager = ({
             'The uploaded image will be stored in Cloudinary and the returned URL will be saved with this notice record.',
           previewTitle: 'Live Preview',
           previewSubtitle: 'How it may appear to customers',
-          priorityOn: 'High Priority Active',
-          priorityOff: 'Normal Priority',
+          priorityOn: 'HIGH PRIORITY ACTIVE',
+          priorityOff: 'NORMAL PRIORITY',
           targetRole: 'CUSTOMER'
         };
+
+  // Validation functions
+  const validateField = (name, value, formState = formData) => {
+    switch (name) {
+      case 'title':
+        if (!value.trim()) return `${pageMeta.titleLabel} IS MANDATORY`;
+        if (value.trim().length < 5) return `${pageMeta.titleLabel} MUST BE AT LEAST 5 CHARACTERS`;
+        if (value.trim().length > 100) return `${pageMeta.titleLabel} MUST NOT EXCEED 100 CHARACTERS`;
+        return null;
+      
+      case 'message':
+        if (!value.trim()) return `${pageMeta.messageLabel} IS MANDATORY`;
+        if (value.trim().length < 10) return `${pageMeta.messageLabel} MUST BE AT LEAST 10 CHARACTERS`;
+        if (value.trim().length > 1000) return `${pageMeta.messageLabel} MUST NOT EXCEED 1000 CHARACTERS`;
+        return null;
+      
+      case 'startDate':
+        if (!value) return 'START DATE IS MANDATORY';
+        const startDate = new Date(value);
+        const todayDate = new Date(today);
+        todayDate.setHours(0, 0, 0, 0);
+        if (startDate < todayDate) return 'START DATE CANNOT BE IN THE PAST';
+        return null;
+      
+      case 'expiryDate':
+        if (!value) return 'EXPIRY DATE IS MANDATORY';
+        const expiryDate = new Date(value);
+        const startDateVal = new Date(formState.startDate);
+        if (formState.startDate && expiryDate <= startDateVal) {
+          return 'EXPIRY DATE MUST BE AFTER START DATE';
+        }
+        return null;
+      
+      default:
+        return null;
+    }
+  };
+
+  const validateAllFields = () => {
+    const newErrors = {
+      title: validateField('title', formData.title),
+      message: validateField('message', formData.message),
+      startDate: validateField('startDate', formData.startDate),
+      expiryDate: validateField('expiryDate', formData.expiryDate, formData)
+    };
+    setErrors(newErrors);
+    return Object.values(newErrors).every(error => error === null);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const newFormData = { ...formData, [name]: value };
+    setFormData(newFormData);
+    
+    // Validate on change after field has been touched
+    if (touched[name]) {
+      const error = validateField(name, value, newFormData);
+      setErrors(prev => ({ ...prev, [name]: error }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const error = validateField(name, value, formData);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
 
   useEffect(() => {
     if (editingNotice) {
@@ -119,6 +203,24 @@ const PromotionNoticeManager = ({
         urgent: editingNotice.urgent || false
       });
       setImageUrl(editingNotice.imageUrl || '');
+      // Mark all fields as touched when editing
+      setTouched({
+        title: true,
+        message: true,
+        startDate: true,
+        expiryDate: true
+      });
+      // Validate all fields on load
+      setTimeout(() => {
+        setErrors({
+          title: validateField('title', editingNotice.title || ''),
+          message: validateField('message', editingNotice.message || ''),
+          startDate: validateField('startDate', editingNotice.startDate || today),
+          expiryDate: validateField('expiryDate', editingNotice.expiryDate || '', {
+            startDate: editingNotice.startDate || today
+          })
+        });
+      }, 0);
     } else {
       setFormData({
         title: '',
@@ -128,6 +230,18 @@ const PromotionNoticeManager = ({
         urgent: false
       });
       setImageUrl('');
+      setTouched({
+        title: false,
+        message: false,
+        startDate: false,
+        expiryDate: false
+      });
+      setErrors({
+        title: null,
+        message: null,
+        startDate: null,
+        expiryDate: null
+      });
     }
   }, [editingNotice, today]);
 
@@ -144,26 +258,35 @@ const PromotionNoticeManager = ({
   }, [formData, imageUrl]);
 
   const validateProtocol = () => {
-    if (!formData.title.trim() || formData.title.trim().length < 5) {
-      toast.error('VALIDATION ERROR: Title must be at least 5 characters');
+    // Mark all fields as touched
+    setTouched({
+      title: true,
+      message: true,
+      startDate: true,
+      expiryDate: true
+    });
+    
+    const isValid = validateAllFields();
+    
+    if (!isValid) {
+      const errorMessages = Object.values(errors).filter(e => e !== null);
+      if (errorMessages.length > 0) {
+        toast.error(errorMessages[0], {
+          icon: '⚠️',
+          style: {
+            borderRadius: '14px',
+            background: '#050505',
+            color: '#ff4444',
+            border: '1px solid #ff4444',
+            fontSize: '11px',
+            fontWeight: '800',
+            letterSpacing: '0.1em'
+          }
+        });
+      }
       return false;
     }
-
-    if (!formData.message.trim() || formData.message.trim().length < 10) {
-      toast.error('VALIDATION ERROR: Message must be at least 10 characters');
-      return false;
-    }
-
-    if (!formData.expiryDate) {
-      toast.error('VALIDATION ERROR: Expiry date required');
-      return false;
-    }
-
-    if (new Date(formData.expiryDate) < new Date(formData.startDate)) {
-      toast.error('DATE ERROR: Expiry cannot be before start date');
-      return false;
-    }
-
+    
     return true;
   };
 
@@ -177,6 +300,18 @@ const PromotionNoticeManager = ({
     });
     setImageUrl('');
     setShowPreview(true);
+    setTouched({
+      title: false,
+      message: false,
+      startDate: false,
+      expiryDate: false
+    });
+    setErrors({
+      title: null,
+      message: null,
+      startDate: null,
+      expiryDate: null
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -247,6 +382,36 @@ const PromotionNoticeManager = ({
     } finally {
       setIsDeploying(false);
     }
+  };
+
+  // Helper to render validation message
+  const renderValidationMessage = (fieldName) => {
+    if (touched[fieldName] && errors[fieldName]) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          className="mt-2 flex items-center gap-2 text-red-500 text-[10px] font-bold uppercase tracking-wider"
+        >
+          <AlertCircle size={12} />
+          <span>{errors[fieldName]}</span>
+        </motion.div>
+      );
+    }
+    if (touched[fieldName] && !errors[fieldName] && formData[fieldName] && fieldName !== 'expiryDate') {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-2 flex items-center gap-2 text-green-500 text-[10px] font-bold uppercase tracking-wider"
+        >
+          <CheckCircle size={12} />
+          <span>VALID</span>
+        </motion.div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -390,87 +555,141 @@ const PromotionNoticeManager = ({
 
               {/* FORM */}
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* TITLE FIELD */}
                 <div className="space-y-2">
                   <label className="text-[11px] uppercase tracking-[0.16em] text-gray-500 font-semibold block">
-                    {pageMeta.titleLabel}
+                    {pageMeta.titleLabel} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    name="title"
                     placeholder={pageMeta.titlePlaceholder}
                     value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    className="w-full rounded-2xl border border-white/10 bg-black/25 px-5 py-4 text-sm font-medium text-white outline-none focus:border-[#D4AF37] transition-all placeholder:text-gray-600"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`w-full rounded-2xl border px-5 py-4 text-sm font-medium text-white outline-none transition-all placeholder:text-gray-600 bg-black/25 ${
+                      touched.title && errors.title
+                        ? 'border-red-500 focus:border-red-500'
+                        : touched.title && !errors.title && formData.title
+                        ? 'border-green-500/50 focus:border-[#D4AF37]'
+                        : 'border-white/10 focus:border-[#D4AF37]'
+                    }`}
                   />
+                  <AnimatePresence mode="wait">
+                    {renderValidationMessage('title')}
+                  </AnimatePresence>
                 </div>
 
+                {/* MESSAGE FIELD */}
                 <div className="space-y-2">
                   <label className="text-[11px] uppercase tracking-[0.16em] text-gray-500 font-semibold block">
-                    {pageMeta.messageLabel}
+                    {pageMeta.messageLabel} <span className="text-red-500">*</span>
                   </label>
                   <textarea
+                    name="message"
                     placeholder={pageMeta.messagePlaceholder}
                     value={formData.message}
-                    onChange={(e) =>
-                      setFormData({ ...formData, message: e.target.value })
-                    }
-                    className="w-full rounded-2xl border border-white/10 bg-black/25 px-5 py-4 text-sm text-white outline-none focus:border-[#D4AF37] transition-all placeholder:text-gray-600 h-36 resize-none"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`w-full rounded-2xl border px-5 py-4 text-sm text-white outline-none transition-all placeholder:text-gray-600 h-36 resize-none bg-black/25 ${
+                      touched.message && errors.message
+                        ? 'border-red-500 focus:border-red-500'
+                        : touched.message && !errors.message && formData.message
+                        ? 'border-green-500/50 focus:border-[#D4AF37]'
+                        : 'border-white/10 focus:border-[#D4AF37]'
+                    }`}
                   />
+                  <AnimatePresence mode="wait">
+                    {renderValidationMessage('message')}
+                  </AnimatePresence>
                 </div>
 
+                {/* DATE FIELDS */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* START DATE */}
                   <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4">
                     <div className="flex items-center gap-3 mb-3">
                       <Calendar size={15} className="text-[#D4AF37]" />
                       <label className="text-[11px] uppercase tracking-[0.16em] text-gray-500 font-semibold">
-                        Start Date
+                        START DATE <span className="text-red-500">*</span>
                       </label>
                     </div>
 
                     <div className="relative">
                       <input
                         type="date"
+                        name="startDate"
                         min={today}
                         value={formData.startDate}
-                        onChange={(e) =>
-                          setFormData({ ...formData, startDate: e.target.value })
-                        }
-                        className="premium-date-input w-full bg-transparent text-sm font-medium text-white outline-none pr-10"
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={`premium-date-input w-full bg-transparent text-sm font-medium text-white outline-none pr-10 ${
+                          touched.startDate && errors.startDate ? 'text-red-400' : ''
+                        }`}
                       />
                       <Calendar
                         size={15}
                         className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[#D4AF37]"
                       />
                     </div>
+                    <AnimatePresence mode="wait">
+                      {touched.startDate && errors.startDate && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          className="mt-2 flex items-center gap-2 text-red-500 text-[10px] font-bold uppercase tracking-wider"
+                        >
+                          <AlertCircle size={10} />
+                          <span>{errors.startDate}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
+                  {/* EXPIRY DATE */}
                   <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-4">
                     <div className="flex items-center gap-3 mb-3">
                       <Clock size={15} className="text-[#D4AF37]" />
                       <label className="text-[11px] uppercase tracking-[0.16em] text-gray-500 font-semibold">
-                        Expiry Date
+                        EXPIRY DATE <span className="text-red-500">*</span>
                       </label>
                     </div>
 
                     <div className="relative">
                       <input
                         type="date"
+                        name="expiryDate"
                         min={formData.startDate || today}
                         value={formData.expiryDate}
-                        onChange={(e) =>
-                          setFormData({ ...formData, expiryDate: e.target.value })
-                        }
-                        className="premium-date-input w-full bg-transparent text-sm font-medium text-white outline-none pr-10"
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={`premium-date-input w-full bg-transparent text-sm font-medium text-white outline-none pr-10 ${
+                          touched.expiryDate && errors.expiryDate ? 'text-red-400' : ''
+                        }`}
                       />
                       <Clock
                         size={15}
                         className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[#D4AF37]"
                       />
                     </div>
+                    <AnimatePresence mode="wait">
+                      {touched.expiryDate && errors.expiryDate && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          className="mt-2 flex items-center gap-2 text-red-500 text-[10px] font-bold uppercase tracking-wider"
+                        >
+                          <AlertCircle size={10} />
+                          <span>{errors.expiryDate}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
+                {/* URGENT BUTTON */}
                 <button
                   type="button"
                   onClick={() =>
@@ -489,6 +708,7 @@ const PromotionNoticeManager = ({
                   {formData.urgent ? pageMeta.priorityOn : pageMeta.priorityOff}
                 </button>
 
+                {/* NOTE */}
                 <div className="rounded-2xl border border-[#D4AF37]/10 bg-[#D4AF37]/[0.04] px-5 py-4">
                   <p className="text-xs uppercase tracking-[0.14em] text-[#D4AF37] font-semibold mb-2">
                     {pageMeta.noteTitle}
@@ -498,6 +718,7 @@ const PromotionNoticeManager = ({
                   </p>
                 </div>
 
+                {/* BUTTONS */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {editingNotice && (
                     <button
@@ -543,7 +764,7 @@ const PromotionNoticeManager = ({
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* RIGHT SIDE - PREVIEW */}
         <div className="space-y-5">
           <AnimatePresence mode="wait">
             {showPreview && (
@@ -723,6 +944,7 @@ const PromotionNoticeManager = ({
             </div>
           )}
 
+          {/* SUMMARY CARD */}
           <div className="rounded-[28px] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6">
             <p
               className={`text-xs uppercase tracking-[0.3em] mb-3 ${
