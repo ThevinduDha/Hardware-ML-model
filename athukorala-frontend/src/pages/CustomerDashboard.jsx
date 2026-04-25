@@ -68,6 +68,19 @@ const CustomerDashboard = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{"name":"Authorized Guest"}');
 
+  // ✅ THEME INITIALIZATION - ADDED HERE
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    const shouldBeDark = savedTheme === "dark" || savedTheme === null;
+    
+    if (shouldBeDark) {
+      document.documentElement.classList.add("dark");
+      if (savedTheme === null) localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
   useEffect(() => {
     fetchProducts();
     if (user.id) {
