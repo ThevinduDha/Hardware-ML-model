@@ -22,7 +22,17 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Warehouse,
-  Truck
+  Truck,
+  Sparkles,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Zap,
+  Crown,
+  Star,
+  Gift,
+  Coffee,
+  Award
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ThemeToggle from '../components/ThemeToggle';
@@ -42,114 +52,229 @@ import SystemConfig from './SystemConfig';
 import SupplierRegistry from './SupplierRegistry';
 import OrderHistoryAdmin from './AdminOrders';
 
+// Enhanced animations
 const pageTransition = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 30, filter: 'blur(10px)' },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.45, ease: 'easeOut' }
+    filter: 'blur(0px)',
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
   },
   exit: {
     opacity: 0,
-    y: -10,
-    transition: { duration: 0.2 }
+    y: -20,
+    filter: 'blur(8px)',
+    transition: { duration: 0.3 }
   }
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 22 },
+  hidden: { opacity: 0, y: 30, scale: 0.96 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, ease: 'easeOut' }
+    scale: 1,
+    transition: { duration: 0.5, ease: 'easeOut' }
   }
 };
 
 const staggerWrap = {
-  hidden: {},
+  hidden: { opacity: 0 },
   show: {
+    opacity: 1,
     transition: {
-      staggerChildren: 0.08
+      staggerChildren: 0.1,
+      delayChildren: 0.2
     }
   }
 };
 
+const cardHover = {
+  hover: {
+    y: -8,
+    scale: 1.02,
+    transition: { type: 'spring', stiffness: 300, damping: 20 }
+  }
+};
+
+const glowPulse = {
+  animate: {
+    boxShadow: [
+      '0 0 0px rgba(212,175,55,0)',
+      '0 0 20px rgba(212,175,55,0.3)',
+      '0 0 0px rgba(212,175,55,0)'
+    ],
+    transition: { duration: 2, repeat: Infinity }
+  }
+};
+
+// Floating particles animation
+const FloatingParticles = () => {
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    duration: 5 + Math.random() * 10,
+    delay: Math.random() * 5
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          className="absolute w-1 h-1 rounded-full bg-[#D4AF37]/20"
+          initial={{ x: `${particle.x}%`, y: `${particle.y}%`, opacity: 0 }}
+          animate={{
+            y: [`${particle.y}%`, `${particle.y - 30}%`, `${particle.y}%`],
+            opacity: [0, 0.5, 0],
+            scale: [0, 1.5, 0]
+          }}
+          transition={{
+            duration: particle.duration,
+            repeat: Infinity,
+            delay: particle.delay,
+            ease: 'easeInOut'
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 const AuditPreviewWidget = () => {
   const [recentLogs, setRecentLogs] = useState([]);
+  const [hoveredLog, setHoveredLog] = useState(null);
 
   useEffect(() => {
     const fetchLogs = () => {
       fetch('http://localhost:8080/api/audit/logs')
         .then((res) => res.json())
-        .then((data) => setRecentLogs(Array.isArray(data) ? data.slice(0, 4) : []))
+        .then((data) => setRecentLogs(Array.isArray(data) ? data.slice(0, 5) : []))
         .catch(() => console.error('Audit Stream Offline'));
     };
 
     fetchLogs();
-    const interval = setInterval(fetchLogs, 10000);
+    const interval = setInterval(fetchLogs, 8000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <motion.div
       variants={fadeUp}
-      className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-black backdrop-blur-xl p-7 shadow-[0_20px_60px_rgba(0,0,0,0.28)] relative overflow-hidden"
+      whileHover="hover"
+      className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-black/60 dark:to-black/30 backdrop-blur-xl p-7 shadow-[0_20px_60px_rgba(0,0,0,0.28)] relative overflow-hidden group"
     >
       <motion.div
-        animate={{ height: ['18%', '100%', '18%'] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
-        className="absolute top-0 left-0 w-[2px] bg-[#D4AF37] opacity-50"
+        animate={{ x: ['-100%', '100%'] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+        className="absolute top-0 left-0 h-full w-32 bg-gradient-to-r from-transparent via-[#D4AF37]/5 to-transparent"
       />
 
-      <div className="flex items-center justify-between gap-4 mb-8">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#D4AF37]/5 to-transparent rounded-full blur-3xl" />
+
+      <div className="flex items-center justify-between gap-4 mb-8 relative z-10">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
+          <motion.p
+            animate={{ letterSpacing: ['0.25em', '0.35em', '0.25em'] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="text-xs font-bold uppercase tracking-[0.25em] text-[#D4AF37]"
+          >
             System Integrity
-          </p>
-          <h3 className="text-2xl font-bold text-black dark:text-white mt-2">Live Audit Feed</h3>
+          </motion.p>
+          <h3 className="text-2xl font-bold text-black dark:text-white mt-2 flex items-center gap-2">
+            Live Audit Feed
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+            >
+              <Activity size={16} className="text-[#D4AF37]" />
+            </motion.div>
+          </h3>
         </div>
 
-        <div className="flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1.5">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span className="text-[11px] font-semibold text-green-400">Live Data</span>
-        </div>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          className="flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1.5"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.3, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-2 h-2 bg-green-500 rounded-full"
+          />
+          <span className="text-[11px] font-semibold text-green-400">Live Stream</span>
+        </motion.div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 relative z-10">
         <AnimatePresence mode="popLayout">
           {recentLogs.length > 0 ? (
             recentLogs.map((log, i) => (
               <motion.div
                 key={log.id}
-                initial={{ opacity: 0, x: -14 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="rounded-2xl border border-gray-200 dark:border-white/6 bg-gray-50 dark:bg-black/20 px-4 py-4 hover:border-[#D4AF37]/25 transition-all"
+                initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                transition={{ delay: i * 0.05, type: 'spring', stiffness: 300 }}
+                whileHover={{ x: 8, backgroundColor: 'rgba(212,175,55,0.05)' }}
+                onHoverStart={() => setHoveredLog(log.id)}
+                onHoverEnd={() => setHoveredLog(null)}
+                className="rounded-2xl border border-gray-200 dark:border-white/6 bg-gray-50 dark:bg-black/20 px-4 py-4 transition-all cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <div className="mt-2 w-2 h-2 rounded-full bg-[#D4AF37]" />
+                    <motion.div
+                      animate={hoveredLog === log.id ? { scale: [1, 1.3, 1] } : {}}
+                      className="mt-2 w-2 h-2 rounded-full bg-[#D4AF37]"
+                    />
                     <div>
-                      <p className="text-sm font-semibold text-black dark:text-white">{log.action}</p>
+                      <p className="text-sm font-bold text-black dark:text-white">{log.action}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words">
                         {log.performedBy} — {log.details}
                       </p>
                     </div>
                   </div>
 
-                  <span className="text-xs font-medium text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-xs font-medium text-gray-400 dark:text-gray-500 whitespace-nowrap"
+                  >
                     {new Date(log.timestamp).toLocaleTimeString([], {
                       hour: '2-digit',
-                      minute: '2-digit'
+                      minute: '2-digit',
+                      second: '2-digit'
                     })}
-                  </span>
+                  </motion.span>
                 </div>
+
+                {hoveredLog === log.id && (
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: '100%' }}
+                    className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-[#D4AF37] to-transparent"
+                  />
+                )}
               </motion.div>
             ))
           ) : (
-            <p className="text-sm text-gray-400 dark:text-gray-500 italic py-16 text-center">
-              Monitoring encrypted streams...
-            </p>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                className="inline-block"
+              >
+                <Activity size={32} className="text-gray-400" />
+              </motion.div>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-4">
+                Monitoring encrypted streams...
+              </p>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
@@ -169,6 +294,8 @@ const AdminDashboard = () => {
   const [editingNotice, setEditingNotice] = useState(null);
   const [preSelectedProduct, setPreSelectedProduct] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [notifications, setNotifications] = useState(3);
 
   useEffect(() => {
     if (location.state && location.state.targetTab) {
@@ -176,6 +303,11 @@ const AdminDashboard = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const user = JSON.parse(localStorage.getItem('user') || '{"name":"Administrator"}');
 
@@ -187,8 +319,8 @@ const AdminDashboard = () => {
   const handleApplyDiscountFromAI = (product) => {
     setPreSelectedProduct(product);
     setActiveTab('promotions');
-    toast.success(`AUTHORIZING DISCOUNT FOR: ${product.name}`, {
-      icon: '⚡',
+    toast.success(`⚡ DISCOUNT PROTOCOL: ${product.name}`, {
+      icon: '🎯',
       style: {
         borderRadius: '14px',
         background: '#050505',
@@ -201,270 +333,236 @@ const AdminDashboard = () => {
   };
 
   const renderHeaderText = () => {
-    switch (activeTab) {
-      case 'clients':
-        return {
-          eyebrow: 'Personnel Management',
-          title: 'Personnel Registry',
-          sub: 'Manage people, roles, records, and staff operations.'
-        };
-      case 'financials':
-        return {
-          eyebrow: 'Financial Intelligence',
-          title: 'Financial Overview',
-          sub: 'Track business revenue, performance, and monetary activity.'
-        };
-      case 'config':
-        return {
-          eyebrow: 'System Configuration',
-          title: 'System Control',
-          sub: 'Adjust system settings and configuration controls.'
-        };
-      case 'broadcast':
-        return {
-          eyebrow: 'Broadcast Hub',
-          title: 'Announcements Center',
-          sub: 'Manage staff notices, promotions, and communication streams.'
-        };
-      case 'promotions':
-        return {
-          eyebrow: 'Promotions & Deals',
-          title: 'Promotion Registry',
-          sub: 'Create, update, and monitor customer-facing campaigns.'
-        };
-      case 'inventory':
-        return {
-          eyebrow: 'Inventory Stock',
-          title: 'Inventory Management',
-          sub: 'Track stock, stock flow, low-stock alerts, and warehouse availability.'
-        };
-      case 'suppliers':
-        return {
-          eyebrow: 'Supplier Network',
-          title: 'Supplier Registry',
-          sub: 'Manage suppliers, supplier records, and future product linking operations.'
-        };
-      default:
-        return {
-          eyebrow: 'Senior Admin Protocol',
-          title: `Welcome, ${user.name}`,
-          sub: 'Monitor operations, analytics, stock, and system activity.'
-        };
-    }
+    const headers = {
+      clients: { eyebrow: 'Personnel Management', title: 'Personnel Registry', sub: 'Manage people, roles, records, and staff operations.' },
+      financials: { eyebrow: 'Financial Intelligence', title: 'Financial Overview', sub: 'Track business revenue, performance, and monetary activity.' },
+      config: { eyebrow: 'System Configuration', title: 'System Control', sub: 'Adjust system settings and configuration controls.' },
+      broadcast: { eyebrow: 'Broadcast Hub', title: 'Announcements Center', sub: 'Manage staff notices, promotions, and communication streams.' },
+      promotions: { eyebrow: 'Promotions & Deals', title: 'Promotion Registry', sub: 'Create, update, and monitor customer-facing campaigns.' },
+      inventory: { eyebrow: 'Inventory Stock', title: 'Inventory Management', sub: 'Track stock, stock flow, low-stock alerts, and warehouse availability.' },
+      suppliers: { eyebrow: 'Supplier Network', title: 'Supplier Registry', sub: 'Manage suppliers, supplier records, and future product linking operations.' },
+      orders: { eyebrow: 'Order Management', title: 'Order History', sub: 'View and manage all customer orders.' },
+      command: { eyebrow: 'Senior Admin Protocol', title: `Welcome, ${user.name}`, sub: 'Monitor operations, analytics, stock, and system activity.' }
+    };
+    return headers[activeTab] || headers.command;
   };
 
   const header = renderHeaderText();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#050505] text-black dark:text-white flex overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#050505] text-black dark:text-white flex overflow-hidden relative">
+      <FloatingParticles />
+
       {/* SIDEBAR */}
       <motion.aside
         animate={{ width: sidebarCollapsed ? 96 : 288 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
-        className="h-screen sticky top-0 border-r border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/45 backdrop-blur-2xl z-40 flex flex-col"
+        transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="h-screen sticky top-0 border-r border-gray-200 dark:border-white/10 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-black/60 dark:to-black/40 backdrop-blur-2xl z-40 flex flex-col shadow-2xl"
       >
         <div className="px-4 py-5 border-b border-gray-200 dark:border-white/6">
           <div className="flex items-center justify-between gap-3">
             <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'justify-center w-full' : ''}`}>
               <motion.div
                 animate={{
+                  rotate: [0, 360],
                   boxShadow: [
-                    '0 0 8px rgba(212,175,55,0.10)',
-                    '0 0 22px rgba(212,175,55,0.35)',
-                    '0 0 8px rgba(212,175,55,0.10)'
+                    '0 0 0px rgba(212,175,55,0)',
+                    '0 0 25px rgba(212,175,55,0.4)',
+                    '0 0 0px rgba(212,175,55,0)'
                   ]
                 }}
-                transition={{ duration: 3.2, repeat: Infinity }}
-                className="w-11 h-11 rounded-2xl bg-[#D4AF37] flex items-center justify-center shrink-0"
+                transition={{ rotate: { duration: 20, repeat: Infinity, ease: 'linear' }, boxShadow: { duration: 2, repeat: Infinity } }}
+                className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#B8960F] flex items-center justify-center shrink-0 shadow-lg"
               >
-                <Activity className="text-black" size={22} />
+                <Crown className="text-black" size={20} />
               </motion.div>
 
               {!sidebarCollapsed && (
-                <div>
-                  <p className="text-base font-bold tracking-tight text-black dark:text-white">Athukorala</p>
-                  <p className="text-xs text-[#D4AF37] font-medium mt-0.5">Industrial OS</p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <p className="text-base font-black tracking-tight text-black dark:text-white">Athukorala</p>
+                  <p className="text-[10px] text-[#D4AF37] font-bold tracking-wider mt-0.5">INDUSTRIAL OS</p>
+                </motion.div>
               )}
             </div>
 
             {!sidebarCollapsed && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05, rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setSidebarCollapsed(true)}
                 className="w-9 h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-300"
               >
                 <PanelLeftClose size={16} />
-              </button>
+              </motion.button>
             )}
           </div>
 
           {sidebarCollapsed && (
-            <div className="mt-4 flex justify-center">
-              <button
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 flex justify-center"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setSidebarCollapsed(false)}
                 className="w-9 h-9 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-300"
               >
                 <PanelLeftOpen size={16} />
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           )}
         </div>
 
-        <nav className="px-3 py-4 flex-1 overflow-y-auto space-y-2">
-          <NavItem
-            icon={<LayoutDashboard size={18} />}
-            label="Command Center"
-            active={activeTab === 'command'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('command')}
-          />
-          <NavItem
-            icon={<Megaphone size={18} />}
-            label="Broadcast Hub"
-            active={activeTab === 'broadcast'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('broadcast')}
-          />
-          <NavItem
-            icon={<Package size={18} />}
-            label="Inventory Stock"
-            active={activeTab === 'inventory'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('inventory')}
-          />
-          <NavItem
-            icon={<Briefcase size={18} />}
-            label="Supplier Registry"
-            active={activeTab === 'suppliers'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('suppliers')}
-          />
-          <NavItem
-            icon={<Tag size={18} />}
-            label="Promotions & Deals"
-            active={activeTab === 'promotions'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('promotions')}
-          />
-
-          <NavItem
-            icon={<Package size={18} />}
-            label="Orders"
-            active={activeTab === 'orders'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('orders')}
-          />
-          <NavItem
-            icon={<Users size={18} />}
-            label="Personnel Registry"
-            active={activeTab === 'clients'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('clients')}
-          />
-          <NavItem
-            icon={<ShieldAlert size={18} />}
-            label="Security Audit"
-            collapsed={sidebarCollapsed}
-            onClick={() => navigate('/admin/audit-logs')}
-          />
-          <NavItem
-            icon={<BarChart3 size={18} />}
-            label="Financials"
-            active={activeTab === 'financials'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('financials')}
-          />
-          <NavItem
-            icon={<Settings size={18} />}
-            label="System Config"
-            active={activeTab === 'config'}
-            collapsed={sidebarCollapsed}
-            onClick={() => setActiveTab('config')}
-          />
+        <nav className="px-3 py-6 flex-1 overflow-y-auto space-y-1.5">
+          {[
+            { id: 'command', icon: <LayoutDashboard size={18} />, label: 'Command Center' },
+            { id: 'broadcast', icon: <Megaphone size={18} />, label: 'Broadcast Hub' },
+            { id: 'inventory', icon: <Package size={18} />, label: 'Inventory Stock' },
+            { id: 'suppliers', icon: <Briefcase size={18} />, label: 'Supplier Registry' },
+            { id: 'promotions', icon: <Tag size={18} />, label: 'Promotions & Deals' },
+            { id: 'orders', icon: <Package size={18} />, label: 'Orders' },
+            { id: 'clients', icon: <Users size={18} />, label: 'Personnel Registry' },
+            { id: 'security', icon: <ShieldAlert size={18} />, label: 'Security Audit', isExternal: true },
+            { id: 'financials', icon: <BarChart3 size={18} />, label: 'Financials' },
+            { id: 'config', icon: <Settings size={18} />, label: 'System Config' }
+          ].map((item, idx) => (
+            <NavItem
+              key={item.id}
+              icon={item.icon}
+              label={item.label}
+              active={activeTab === item.id}
+              collapsed={sidebarCollapsed}
+              index={idx}
+              onClick={() => item.isExternal ? navigate('/admin/audit-logs') : setActiveTab(item.id)}
+            />
+          ))}
         </nav>
 
-        <div className="p-3 border-t border-gray-200 dark:border-white/6">
+        <div className="p-3 border-t border-gray-200 dark:border-white/6 space-y-3">
           <ThemeToggle />
           <motion.button
-            whileHover={{ x: 4 }}
+            whileHover={{ x: 4, backgroundColor: 'rgba(239, 68, 68, 0.15)' }}
             whileTap={{ scale: 0.98 }}
             onClick={handleLogout}
-            className={`w-full mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 text-red-600 dark:text-red-300 bg-red-500/8 border border-red-500/15 hover:bg-red-500/12 transition-all ${
+            className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-red-600 dark:text-red-400 bg-red-500/8 border border-red-500/15 hover:bg-red-500/12 transition-all group ${
               sidebarCollapsed ? 'justify-center' : ''
             }`}
           >
-            <LogOut size={16} />
-            {!sidebarCollapsed && <span className="text-sm font-semibold">Terminate Session</span>}
+            <LogOut size={16} className="group-hover:rotate-12 transition-transform" />
+            {!sidebarCollapsed && <span className="text-sm font-bold">Terminate Session</span>}
           </motion.button>
         </div>
       </motion.aside>
 
       {/* MAIN */}
       <main className="flex-1 min-w-0 overflow-y-auto relative">
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.03, 0.07, 0.03] }}
-          transition={{ duration: 9, repeat: Infinity }}
-          className="absolute top-0 right-0 w-[760px] h-[760px] bg-[#D4AF37] blur-[170px] rounded-full -z-10"
-        />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-[#D4AF37]/10 via-transparent to-transparent rounded-full blur-3xl -z-10" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl -z-10" />
 
         <div className="px-6 lg:px-10 py-8 lg:py-10">
           {/* TOP HEADER */}
-          {activeTab !== 'clients' &&
-            activeTab !== 'financials' &&
-            activeTab !== 'config' &&
-            activeTab !== 'promotions' && (
-              <header className="mb-10 lg:mb-12">
-                <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
-                  <motion.div
-                    initial={{ opacity: 0, x: -16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.55 }}
-                  >
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
-                      <p className="text-sm font-semibold text-[#D4AF37] uppercase tracking-[0.22em]">
-                        {header.eyebrow}
-                      </p>
-                    </div>
-
-                    <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight leading-none text-black dark:text-white">
-                      {header.title}
-                    </h1>
-
-                    <p className="mt-4 text-base text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed">
-                      {header.sub}
+          {activeTab !== 'clients' && activeTab !== 'financials' && activeTab !== 'config' && activeTab !== 'promotions' && (
+            <motion.header
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-10 lg:mb-12"
+            >
+              <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-2 h-2 rounded-full bg-[#D4AF37]"
+                    />
+                    <p className="text-sm font-bold text-[#D4AF37] uppercase tracking-[0.22em]">
+                      {header.eyebrow}
                     </p>
-                  </motion.div>
+                  </div>
+
+                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black tracking-tight leading-none text-black dark:text-white">
+                    {header.title.split(' ').map((word, i) => (
+                      <motion.span
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="inline-block mr-2"
+                      >
+                        {word}
+                      </motion.span>
+                    ))}
+                  </h1>
+
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="mt-4 text-base text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed"
+                  >
+                    {header.sub}
+                  </motion.p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
+                >
+                  <div className="relative group">
+                    <Search
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#D4AF37] transition-colors"
+                      size={18}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search registry..."
+                      className="w-full sm:w-80 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 py-3.5 pl-11 pr-4 text-sm outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/30 transition-all placeholder:text-gray-500 text-black dark:text-white"
+                    />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05, rotate: 5 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center hover:bg-[#D4AF37]/20 transition-all group"
+                  >
+                    <Bell size={20} className="text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                    {notifications > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center"
+                      >
+                        <span className="text-[9px] font-bold text-white">{notifications}</span>
+                      </motion.div>
+                    )}
+                  </motion.button>
 
                   <motion.div
-                    initial={{ opacity: 0, x: 16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.55 }}
-                    className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
+                    whileHover={{ scale: 1.02 }}
+                    className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10"
                   >
-                    <div className="relative group">
-                      <Search
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#D4AF37]"
-                        size={18}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Search registry..."
-                        className="w-full sm:w-72 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 py-3.5 pl-11 pr-4 text-sm outline-none focus:border-[#D4AF37] transition-all placeholder:text-gray-500 text-black dark:text-white"
-                      />
-                    </div>
-
-                    <motion.button
-                      whileHover={{ rotate: 10 }}
-                      className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center relative hover:bg-[#D4AF37]/15 transition-all"
-                    >
-                      <Bell size={20} className="text-[#D4AF37]" />
-                      <div className="absolute top-0.5 right-0.5 w-3 h-3 bg-red-500 border-2 border-white dark:border-[#050505] rounded-full" />
-                    </motion.button>
+                    <Clock size={14} className="text-[#D4AF37]" />
+                    <span className="text-xs font-mono text-gray-600 dark:text-gray-400">
+                      {currentTime.toLocaleTimeString()}
+                    </span>
                   </motion.div>
-                </div>
-              </header>
-            )}
+                </motion.div>
+              </div>
+            </motion.header>
+          )}
 
           <AnimatePresence mode="wait">
             {activeTab === 'command' && (
@@ -483,25 +581,28 @@ const AdminDashboard = () => {
                   className="grid grid-cols-1 md:grid-cols-3 gap-6"
                 >
                   <StatCard
-                    icon={<Boxes />}
+                    icon={<Boxes size={24} />}
                     label="Active Inventory"
                     value="14,208"
                     sub="Units currently in stock"
                     trend="+12.5%"
+                    trendUp={true}
                   />
                   <StatCard
-                    icon={<Wallet />}
+                    icon={<Wallet size={24} />}
                     label="Daily Revenue"
                     value="LKR 425K"
                     sub="Verified transactions today"
                     trend="+8.2%"
+                    trendUp={true}
                   />
                   <StatCard
-                    icon={<Users />}
+                    icon={<Users size={24} />}
                     label="Total Clients"
                     value="2,148"
                     sub="Registered database entries"
                     trend="+4.0%"
+                    trendUp={true}
                   />
                 </motion.div>
 
@@ -527,7 +628,12 @@ const AdminDashboard = () => {
                   />
                 </motion.div>
 
-                <motion.div variants={fadeUp} initial="hidden" animate="show">
+                <motion.div
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="show"
+                  whileHover="hover"
+                >
                   <DiscountSuggestionPanel onApplyClick={handleApplyDiscountFromAI} />
                 </motion.div>
 
@@ -548,26 +654,31 @@ const AdminDashboard = () => {
 
                     <motion.div
                       variants={fadeUp}
-                      className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-900/80 backdrop-blur-sm p-7 shadow-[0_20px_60px_rgba(0,0,0,0.28)] relative overflow-hidden"
+                      whileHover={{ y: -4 }}
+                      className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-black/60 dark:to-black/30 backdrop-blur-sm p-7 shadow-[0_20px_60px_rgba(0,0,0,0.28)] relative overflow-hidden"
                     >
-                      <div className="absolute top-5 right-5 opacity-10">
-                        <Activity size={72} />
-                      </div>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                        className="absolute -top-10 -right-10 opacity-5"
+                      >
+                        <Zap size={120} />
+                      </motion.div>
 
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37] mb-3">
-                        Quick Operations
-                      </p>
-                      <h3 className="text-2xl font-bold mb-6 text-black dark:text-white">Admin Shortcuts</h3>
+                      <div className="relative z-10">
+                        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#D4AF37] mb-3 flex items-center gap-2">
+                          <Sparkles size={12} />
+                          Quick Operations
+                        </p>
+                        <h3 className="text-2xl font-bold mb-6 text-black dark:text-white">Admin Shortcuts</h3>
 
-                      <div className="space-y-4">
-                        <ActionButton label="Add New Product" onClick={() => setIsModalOpen(true)} />
-                        <ActionButton label="Open Inventory Panel" onClick={() => setActiveTab('inventory')} />
-                        <ActionButton label="Open Supplier Registry" onClick={() => setActiveTab('suppliers')} />
-                        <ActionButton label="Fiscal Analytics" onClick={() => setActiveTab('financials')} />
-                        <ActionButton
-                          label="Stock Audit View"
-                          onClick={() => navigate('/admin/audit-logs')}
-                        />
+                        <div className="space-y-3">
+                          <ActionButton label="Add New Product" onClick={() => setIsModalOpen(true)} />
+                          <ActionButton label="Open Inventory Panel" onClick={() => setActiveTab('inventory')} />
+                          <ActionButton label="Open Supplier Registry" onClick={() => setActiveTab('suppliers')} />
+                          <ActionButton label="Fiscal Analytics" onClick={() => setActiveTab('financials')} />
+                          <ActionButton label="Stock Audit View" onClick={() => navigate('/admin/audit-logs')} />
+                        </div>
                       </div>
                     </motion.div>
                   </motion.div>
@@ -584,20 +695,38 @@ const AdminDashboard = () => {
                 exit="exit"
                 className="space-y-10"
               >
-                <section className="space-y-5">
+                <motion.section
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="space-y-5"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                    <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-400">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-2 h-2 bg-blue-500 rounded-full"
+                    />
+                    <h2 className="text-sm font-bold uppercase tracking-[0.22em] text-blue-400">
                       Internal Staff Protocol
                     </h2>
                   </div>
                   <StaffNoticeManager onSuccess={() => setArchiveRefresh((prev) => prev + 1)} />
-                </section>
+                </motion.section>
 
-                <section className="space-y-5">
+                <motion.section
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-5"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse" />
-                    <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                      className="w-2 h-2 bg-[#D4AF37] rounded-full"
+                    />
+                    <h2 className="text-sm font-bold uppercase tracking-[0.22em] text-[#D4AF37]">
                       Customer Promotion Engine
                     </h2>
                   </div>
@@ -610,9 +739,13 @@ const AdminDashboard = () => {
                       setArchiveRefresh((prev) => prev + 1);
                     }}
                   />
-                </section>
+                </motion.section>
 
-                <motion.div variants={fadeUp} initial="hidden" animate="show">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
                   <NoticeArchive
                     refreshTrigger={archiveRefresh}
                     onEdit={(notice) => {
@@ -647,15 +780,27 @@ const AdminDashboard = () => {
                     />
                   </div>
 
-                  <div className="xl:col-span-5 rounded-3xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/[0.04] backdrop-blur-xl p-7 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37] mb-3">
-                      Active Protocols
-                    </p>
-                    <h3 className="text-2xl font-bold mb-6 text-black dark:text-white">Running Promotions</h3>
-                    <ActivePromotionList
-                      refreshTrigger={promoRefreshTrigger}
-                      onEdit={(promo) => setEditingPromo(promo)}
-                    />
+                  <div className="xl:col-span-5">
+                    <motion.div
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
+                      whileHover={{ y: -4 }}
+                      className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-black/60 dark:to-black/30 backdrop-blur-xl p-7 shadow-[0_20px_60px_rgba(0,0,0,0.28)] relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#D4AF37]/5 to-transparent rounded-full blur-2xl" />
+                      <div className="relative z-10">
+                        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#D4AF37] mb-3 flex items-center gap-2">
+                          <Gift size={12} />
+                          Active Protocols
+                        </p>
+                        <h3 className="text-2xl font-bold mb-6 text-black dark:text-white">Running Promotions</h3>
+                        <ActivePromotionList
+                          refreshTrigger={promoRefreshTrigger}
+                          onEdit={(promo) => setEditingPromo(promo)}
+                        />
+                      </div>
+                    </motion.div>
                   </div>
                 </div>
               </motion.div>
@@ -720,6 +865,7 @@ const AdminDashboard = () => {
                 <PersonnelRegistry />
               </motion.div>
             )}
+            
             {activeTab === 'orders' && (
               <motion.div
                 key="orders"
@@ -744,15 +890,15 @@ const AdminDashboard = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] cursor-pointer"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] cursor-pointer"
             />
 
             <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 24, stiffness: 190 }}
-              className="fixed right-0 top-0 h-screen w-full sm:w-[520px] z-[70] shadow-2xl"
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 h-screen w-full sm:w-[540px] z-[70] shadow-2xl"
             >
               <AddProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
             </motion.div>
@@ -763,90 +909,144 @@ const AdminDashboard = () => {
   );
 };
 
-const NavItem = ({ icon, label, active = false, onClick, collapsed = false }) => (
+const NavItem = ({ icon, label, active = false, onClick, collapsed = false, index = 0 }) => (
   <motion.button
-    whileHover={{ x: collapsed ? 0 : 4 }}
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ delay: index * 0.05 }}
+    whileHover={{ x: collapsed ? 0 : 6, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={onClick}
     className={`w-full flex items-center ${
       collapsed ? 'justify-center' : 'justify-between'
     } rounded-2xl px-4 py-3.5 transition-all duration-300 group relative ${
       active
-        ? 'bg-[#D4AF37] text-black shadow-[0_10px_24px_rgba(212,175,55,0.18)]'
+        ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8960F] text-black shadow-[0_10px_30px_rgba(212,175,55,0.25)]'
         : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-[#D4AF37] hover:bg-gray-100 dark:hover:bg-gray-800/50'
     }`}
     title={collapsed ? label : undefined}
   >
     <div className={`flex items-center ${collapsed ? '' : 'gap-3'} min-w-0`}>
-      <span className="shrink-0">{icon}</span>
+      <motion.span
+        animate={active ? { rotate: [0, 10, 0] } : {}}
+        transition={{ duration: 0.3 }}
+        className="shrink-0"
+      >
+        {icon}
+      </motion.span>
       {!collapsed && (
-        <span className="text-sm font-medium truncate">
+        <span className="text-sm font-semibold truncate tracking-wide">
           {label}
         </span>
       )}
     </div>
 
-    {!collapsed && active && <ChevronRight size={16} />}
+    {!collapsed && active && (
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 300 }}
+      >
+        <ChevronRight size={16} />
+      </motion.div>
+    )}
+
+    {active && (
+      <motion.div
+        layoutId="activeTab"
+        className="absolute left-0 w-1 h-full bg-[#D4AF37] rounded-r-full"
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      />
+    )}
   </motion.button>
 );
 
-const StatCard = ({ icon, label, value, sub, trend }) => (
+const StatCard = ({ icon, label, value, sub, trend, trendUp = true }) => (
   <motion.div
     variants={fadeUp}
-    whileHover={{ y: -6, borderColor: 'rgba(212,175,55,0.35)' }}
-    className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/[0.04] backdrop-blur-xl p-7 shadow-[0_18px_50px_rgba(0,0,0,0.24)] relative overflow-hidden"
+    whileHover={{ y: -8, borderColor: 'rgba(212,175,55,0.4)' }}
+    className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-black/60 dark:to-black/30 backdrop-blur-xl p-7 shadow-[0_18px_50px_rgba(0,0,0,0.24)] relative overflow-hidden group cursor-pointer"
   >
-    <div className="absolute top-5 right-5 text-[#D4AF37]/12">
-      {React.cloneElement(icon, { size: 54 })}
-    </div>
+    <motion.div
+      animate={{ scale: [1, 1.1, 1], opacity: [0.05, 0.1, 0.05] }}
+      transition={{ duration: 3, repeat: Infinity }}
+      className="absolute top-5 right-5"
+    >
+      {React.cloneElement(icon, { size: 54, className: "text-[#D4AF37]" })}
+    </motion.div>
 
-    <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{label}</p>
-    <h3 className="text-4xl lg:text-5xl font-black tracking-tight mt-4 text-black dark:text-white">
+    <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</p>
+    
+    <motion.h3
+      initial={{ scale: 0.9 }}
+      animate={{ scale: 1 }}
+      className="text-4xl lg:text-5xl font-black tracking-tight mt-4 text-black dark:text-white"
+    >
       {value}
-    </h3>
+    </motion.h3>
+    
     <p className="text-sm text-gray-500 dark:text-gray-500 mt-3">{sub}</p>
 
-    <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/15 bg-[#D4AF37]/8 px-3.5 py-2 text-sm font-semibold text-[#D4AF37]">
-      <ArrowUpRight size={14} />
+    <motion.div
+      whileHover={{ x: 4 }}
+      className={`mt-6 inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-bold ${
+        trendUp 
+          ? 'border-green-500/20 bg-green-500/10 text-green-500' 
+          : 'border-red-500/20 bg-red-500/10 text-red-500'
+      }`}
+    >
+      {trendUp ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
       {trend}
-    </div>
+    </motion.div>
+
+    <motion.div
+      whileHover={{ width: '100%' }}
+      className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#D4AF37] to-transparent"
+      style={{ width: '0%' }}
+    />
   </motion.div>
 );
 
 const QuickAccessCard = ({ icon, title, desc, actionLabel, onClick }) => (
   <motion.div
     variants={fadeUp}
-    whileHover={{ y: -6, borderColor: 'rgba(212,175,55,0.28)' }}
-    className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/[0.04] backdrop-blur-xl p-7 shadow-[0_18px_50px_rgba(0,0,0,0.24)]"
+    whileHover={{ y: -8, borderColor: 'rgba(212,175,55,0.35)' }}
+    className="rounded-3xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-black/60 dark:to-black/30 backdrop-blur-xl p-7 shadow-[0_18px_50px_rgba(0,0,0,0.24)] relative overflow-hidden group"
   >
-    <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/12 border border-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] mb-5">
+    <motion.div
+      animate={{ rotate: [0, 5, -5, 0] }}
+      transition={{ duration: 4, repeat: Infinity }}
+      className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] mb-5"
+    >
       {icon}
-    </div>
+    </motion.div>
 
     <h3 className="text-2xl font-bold text-black dark:text-white">{title}</h3>
     <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{desc}</p>
 
     <motion.button
-      whileHover={{ x: 4 }}
+      whileHover={{ x: 6 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="mt-6 inline-flex items-center gap-2 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-4 py-3 text-sm font-semibold text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-all"
+      className="mt-6 inline-flex items-center gap-2 rounded-2xl border border-[#D4AF37]/30 bg-gradient-to-r from-[#D4AF37]/10 to-transparent px-5 py-3 text-sm font-bold text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-all group"
     >
       {actionLabel}
-      <ArrowUpRight size={16} />
+      <ArrowUpRight size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
     </motion.button>
   </motion.div>
 );
 
 const ActionButton = ({ label, onClick }) => (
   <motion.button
-    whileHover={{ x: 4, scale: 1.01 }}
-    whileTap={{ scale: 0.985 }}
+    whileHover={{ x: 6, scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-gray-800 hover:border-[#D4AF37]/35 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all px-5 py-4 text-left flex items-center justify-between"
+    className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-gray-800/50 hover:border-[#D4AF37]/40 hover:bg-gradient-to-r hover:from-[#D4AF37]/5 hover:to-transparent transition-all px-5 py-4 text-left flex items-center justify-between group"
   >
-    <span className="text-sm font-semibold text-black dark:text-white">{label}</span>
-    <ArrowUpRight size={16} className="text-[#D4AF37]" />
+    <span className="text-sm font-bold text-black dark:text-white group-hover:text-[#D4AF37] transition-colors">
+      {label}
+    </span>
+    <ArrowUpRight size={16} className="text-[#D4AF37] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
   </motion.button>
 );
 
