@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/athukorala-backend.iml" filepath="$PROJECT_DIR$/.idea/athukorala-backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/inventory-system/inventory-system.iml" filepath="$PROJECT_DIR$/inventory-system/inventory-system.iml" />
     </modules>
   </component>
 </project>
